@@ -124,18 +124,10 @@
           placeholder="https://script.google.com/macros/s/.../exec"
           class="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 font-mono" />
       </div>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label class="block text-xs font-medium text-gray-700 mb-1">Seções que são Serviços</label>
-          <input id="service-sections" type="text" value="SERVICOS,VISITA TECNICA,INSTALACAO,MONTAGEM,SERVICO"
-            class="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2" />
-          <p class="text-xs text-gray-400 mt-1">Separe por vírgula (case insensitive).</p>
-        </div>
-        <div>
-          <label class="block text-xs font-medium text-gray-700 mb-1">Seções de Visita Técnica</label>
-          <input id="visit-sections" type="text" value="VISITA TECNICA,VISITA,VT"
-            class="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2" />
-        </div>
+      <div class="p-3 rounded-lg text-xs" style="background:#e8f4e3;border:1px solid #BCE05E">
+        <p style="color:#253B35"><b>Critérios automáticos de classificação:</b></p>
+        <p class="text-gray-600 mt-1">🛠 <b>Serviços:</b> coluna M (Status do produto) começa com <code class="bg-white px-1 rounded">SERVICO</code></p>
+        <p class="text-gray-600 mt-1">🔍 <b>Visitas Técnicas:</b> coluna J (Descrição) começa com <code class="bg-white px-1 rounded">Visita</code></p>
       </div>
     </div>
     <div class="mt-3 flex gap-2">
@@ -179,7 +171,7 @@
   <!-- ── KPIs MASTER ── -->
   <section class="mb-8">
     <h2 class="section-title">KPIs Master — Serviços</h2>
-    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4" id="kpi-master"></div>
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4" id="kpi-master"></div>
   </section>
 
   <!-- ── CHARTS ROW 1 — Seções (todos os dados) ── -->
@@ -284,43 +276,30 @@ const charts = {};
 function loadConfig() {
   const saved = JSON.parse(localStorage.getItem(CFG_KEY) || '{}');
   if (saved.csvUrl) document.getElementById('sheet-csv-url').value = saved.csvUrl;
-  if (saved.serviceSections) document.getElementById('service-sections').value = saved.serviceSections;
-  if (saved.visitSections) document.getElementById('visit-sections').value = saved.visitSections;
 }
 
 function saveConfig() {
   localStorage.setItem(CFG_KEY, JSON.stringify({
     csvUrl: document.getElementById('sheet-csv-url').value.trim(),
-    serviceSections: document.getElementById('service-sections').value,
-    visitSections: document.getElementById('visit-sections').value,
   }));
 }
 
-function getServiceSections() {
-  return document.getElementById('service-sections').value
-    .split(',').map(s => s.trim().toUpperCase()).filter(Boolean);
-}
-
-function getVisitSections() {
-  return document.getElementById('visit-sections').value
-    .split(',').map(s => s.trim().toUpperCase()).filter(Boolean);
-}
-
-// Busca o valor da coluna "Seção" tolerando variações de encoding/BOM no nome da coluna
-function getSecao(row) {
-  // Tenta várias grafias possíveis
-  return (row['Seção'] || row['Seção'] || row['Secao'] ||
-    Object.entries(row).find(([k]) => k.toLowerCase().includes('se') && k.toLowerCase().includes('o'))?.[1] || '').toUpperCase().trim();
-}
-
+// Coluna M = "Status do produto" — serviços começam com SERVICO
 function isService(row) {
-  const sec = getSecao(row);
-  return getServiceSections().some(s => sec.includes(s));
+  const val = (getField(row, 'Status do produto', 'status do produto') || '').toUpperCase().trim();
+  return val.startsWith('SERVICO');
 }
 
+// Coluna J = "Descrição" — visitas técnicas começam com VISITA
 function isVisit(row) {
-  const sec = getSecao(row);
-  return getVisitSections().some(s => sec.includes(s));
+  const val = (getDesc(row) || '').toUpperCase().trim();
+  return val.startsWith('VISITA');
+}
+
+// Seção da linha (coluna K)
+function getSecao(row) {
+  return (getField(row, 'Seção', 'Secao', 'seção', 'secao') ||
+    Object.entries(row).find(([k]) => /se[çc][aã]o/i.test(k))?.[1] || '').toUpperCase().trim();
 }
 
 // ───────────────────────────────────────────────
@@ -453,10 +432,11 @@ function getStatus(row)    { return getField(row, 'Status do Pedido de Venda', '
 function getData(row)      { return getField(row, 'Data de Criação', 'Data de Criacao', 'Data'); }
 
 // ───────────────────────────────────────────────
-// DEMO DATA
+// DEMO DATA — espelha a estrutura real do Leroy Merlin
+// Coluna M (Status do produto): SERVICO* = serviço
+// Coluna J (Descrição): começa com Visita = visita técnica
 // ───────────────────────────────────────────────
 function loadDemoData() {
-  const sections = ['SERVICOS','VISITA TECNICA','INSTALACAO','MONTAGEM','CERAMICA','MATERIAIS','PINTURA','JARDIM'];
   const sellers = [
     '51045709 - ROBSON BARBOSA','51040893 - ALEXANDRE COSTA','51014804 - RENATO WAGNER',
     '51004077 - REINALDO GOMES','51072477 - LAIS JULIA','51064196 - GUILHERME TEIXEIRA',
@@ -464,39 +444,60 @@ function loadDemoData() {
   ];
   const channels = ['0020-LOJA BH SUL/Loja','0020-LOJA BH SUL/Ecommerce','0020-LOJA BH SUL/Televendas'];
   const statuses = ['PAGO','FATURADO_TOTAL','FATURADO_PARCIAL'];
-  const descs = {
-    'SERVICOS': ['Serviço de Instalação Elétrica','Serviço de Montagem','Serviço de Pintura Residencial','Serviço de Hidráulica'],
-    'VISITA TECNICA': ['Visita Técnica Padrão','Visita Técnica Projeto','Visita Avaliação'],
-    'INSTALACAO': ['Instalação de Piso','Instalação de Armário','Instalação de Box'],
-    'MONTAGEM': ['Montagem de Móvel','Montagem de Churrasqueira','Montagem de Estante'],
-    'CERAMICA': ['Piso Cerâmico 60x60','Porcelanato Marmorizado','Revestimento Branco'],
-    'MATERIAIS': ['Argamassa 20kg','Rejunte Branco','Impermeabilizante'],
-    'PINTURA': ['Tinta Acrílica 18L','Primer','Selador'],
-    'JARDIM': ['Conjunto Jardinagem','Fertilizante','Terra Adubada']
-  };
+
+  // Cada item define: Seção (col K), Descrição (col J), Status do produto (col M)
+  const catalog = [
+    // ── SERVIÇOS (col M começa com SERVICO) ──
+    { secao:'SERVICOS', desc:'Serviço de Instalação Elétrica',    statusProd:'SERVICO' },
+    { secao:'SERVICOS', desc:'Serviço de Montagem de Móveis',     statusProd:'SERVICO' },
+    { secao:'SERVICOS', desc:'Serviço de Pintura Residencial',    statusProd:'SERVICO_PINTURA' },
+    { secao:'SERVICOS', desc:'Serviço de Hidráulica',             statusProd:'SERVICO' },
+    { secao:'INSTALACAO', desc:'Instalação de Piso Laminado',     statusProd:'SERVICO_INSTALACAO' },
+    { secao:'INSTALACAO', desc:'Instalação de Box Banheiro',      statusProd:'SERVICO_INSTALACAO' },
+    { secao:'MONTAGEM',   desc:'Montagem de Armário',             statusProd:'SERVICO_MONTAGEM' },
+    { secao:'MONTAGEM',   desc:'Montagem de Estante',             statusProd:'SERVICO_MONTAGEM' },
+    // ── VISITAS TÉCNICAS (col J começa com Visita, col M = SERVICO) ──
+    { secao:'SERVICOS', desc:'Visita Técnica Padrão',             statusProd:'SERVICO' },
+    { secao:'SERVICOS', desc:'Visita Técnica de Projeto',         statusProd:'SERVICO' },
+    { secao:'SERVICOS', desc:'Visita de Avaliação',               statusProd:'SERVICO' },
+    // ── PRODUTOS (col M NÃO começa com SERVICO) ──
+    { secao:'CERAMICA',  desc:'Piso Cerâmico 60x60',             statusProd:'PENDENTE' },
+    { secao:'CERAMICA',  desc:'Porcelanato Marmorizado',          statusProd:'EM_SEPARACAO' },
+    { secao:'MATERIAIS', desc:'Argamassa Graute 20kg',            statusProd:'PENDENTE' },
+    { secao:'MATERIAIS', desc:'Rejunte Branco',                   statusProd:'FATURADO' },
+    { secao:'PINTURA',   desc:'Tinta Acrílica 18L',               statusProd:'PENDENTE' },
+    { secao:'JARDIM',    desc:'Conjunto de Jardinagem',           statusProd:'FATURADO' },
+    { secao:'FERRAMENTAS', desc:'Furadeira de Impacto',           statusProd:'PENDENTE' },
+  ];
 
   rawData = [];
   const baseDate = new Date('2026-04-01');
-  for (let i = 0; i < 300; i++) {
-    const sec = sections[Math.floor(Math.random() * sections.length)];
+  for (let i = 0; i < 400; i++) {
+    const item   = catalog[Math.floor(Math.random() * catalog.length)];
     const seller = sellers[Math.floor(Math.random() * sellers.length)];
     const d = new Date(baseDate);
     d.setDate(d.getDate() + Math.floor(Math.random() * 52));
-    const descList = descs[sec] || ['Item Genérico'];
-    const desc = descList[Math.floor(Math.random() * descList.length)];
-    const qty = Math.floor(Math.random() * 5) + 1;
-    const price = (Math.random() * 800 + 80).toFixed(2);
+    const qty   = Math.floor(Math.random() * 4) + 1;
+    const price = +(Math.random() * 900 + 80).toFixed(2);
     rawData.push({
-      'Data de Criação': d.toISOString().slice(0, 10),
-      'Seção': sec,
-      'LDAP': seller,
-      'Loja/Canal': channels[Math.floor(Math.random() * channels.length)],
+      'Data de Criação':          d.toISOString().slice(0, 10),
       'Status do Pedido de Venda': statuses[Math.floor(Math.random() * statuses.length)],
-      'Descrição': desc,
-      'Quantidade': qty,
-      'Valor total do Item': (qty * parseFloat(price)).toFixed(2),
-      'Preço Unitário': price,
-      'Número do pedido': 'PED' + (100000 + i),
+      'Loja/Canal':               channels[Math.floor(Math.random() * channels.length)],
+      'Número do pedido':         'PED' + (100000 + i),
+      'Valor Total':              (qty * price).toFixed(2),
+      'Nome do Cliente':          'Cliente Demo',
+      'CPF/CNPJ/Passaporte':      '000.000.000-00',
+      'Justificativa':            '',
+      'LM':                       '9' + String(i).padStart(7, '0'),
+      'Descrição':                item.desc,           // ← col J
+      'Seção':                    item.secao,           // ← col K
+      'Top':                      'TOP1',
+      'Status do produto':        item.statusProd,      // ← col M  ★ critério de serviço
+      'Quantidade':               qty,
+      'Preço Unitário':           price.toFixed(2),
+      'Desconto Pontual':         '',
+      'Valor total do Item':      (qty * price).toFixed(2),
+      'LDAP':                     seller,
     });
   }
 
@@ -577,16 +578,16 @@ function renderKpiMaster(services, visits) {
   const totalVal = services.reduce((s, r) => s + getValorItem(r), 0);
   const visitQtd = visits.reduce((s, r) => s + getQtd(r), 0);
   const visitVal = visits.reduce((s, r) => s + getValorItem(r), 0);
-  const sellers = new Set(services.filter(r => getLDAP(r) && !getLDAP(r).includes('ECOMMERCE')).map(r => getLDAP(r)));
-  const ticket = totalQtd > 0 ? totalVal / totalQtd : 0;
+  const sellers  = new Set(services.filter(r => getLDAP(r) && !getLDAP(r).toUpperCase().includes('ECOMMERCE')).map(r => getLDAP(r)));
+  const secoes   = new Set(services.map(r => getSecao(r)).filter(Boolean));
 
+  // Ordem: Serviços Vendidos | Visitas Técnicas | Receita de Serviços | Vendedores Ativos | Seções de Serviço
   const cards = [
-    { label: 'Serviços Vendidos', value: fmtQtd(totalQtd), sub: 'unidades', color: 'green', icon: '🛠' },
-    { label: 'Receita de Serviços', value: fmtBRL(totalVal), sub: 'valor total', color: 'blue', icon: '💰' },
-    { label: 'Visitas Técnicas', value: fmtQtd(visitQtd), sub: fmtBRL(visitVal), color: 'purple', icon: '🔍' },
-    { label: 'Ticket Médio Serviço', value: fmtBRL(ticket), sub: 'por unidade', color: 'amber', icon: '📊' },
-    { label: 'Vendedores Ativos', value: sellers.size, sub: 'com venda de serviço', color: 'teal', icon: '👤' },
-    { label: 'Seções de Serviço', value: new Set(services.map(r => getSecao(r))).size, sub: 'seções distintas', color: 'rose', icon: '📂' },
+    { label: 'Serviços Vendidos',   value: fmtQtd(totalQtd),  sub: 'unidades',             color: 'green',  icon: '🛠' },
+    { label: 'Visitas Técnicas',    value: fmtQtd(visitQtd),  sub: fmtBRL(visitVal),        color: 'purple', icon: '🔍' },
+    { label: 'Receita de Serviços', value: fmtBRL(totalVal),  sub: 'valor total',           color: 'blue',   icon: '💰' },
+    { label: 'Vendedores Ativos',   value: sellers.size,       sub: 'com venda de serviço', color: 'teal',   icon: '👤' },
+    { label: 'Seções de Serviço',   value: secoes.size,        sub: 'seções distintas',     color: 'rose',   icon: '📂' },
   ];
 
   document.getElementById('kpi-master').innerHTML = cards.map(c => `
