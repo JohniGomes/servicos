@@ -174,28 +174,23 @@
     <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4" id="kpi-master"></div>
   </section>
 
-  <!-- ── CHARTS ROW 1 — Seções (todos os dados) ── -->
+  <!-- ── CHARTS ROW 1 ── -->
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+    <!-- Serviços por Vendedor (R$) -->
     <div class="card">
-      <h3 class="card-title">Vendas por Seção — Quantidade</h3>
-      <div class="chart-container"><canvas id="chart-secao-qtd"></canvas></div>
+      <h3 class="card-title">Vendas de Serviços por Vendedor (R$)</h3>
+      <div class="chart-container"><canvas id="chart-vendedor-val"></canvas></div>
     </div>
+    <!-- Serviços por Seção — Valor (filtrado por isService) -->
     <div class="card">
-      <h3 class="card-title">Vendas por Seção — Valor (R$)</h3>
+      <h3 class="card-title">Serviços por Seção — Valor (R$)</h3>
       <div class="chart-container"><canvas id="chart-secao-valor"></canvas></div>
-    </div>
-  </div>
-
-  <!-- ── CHARTS ROW 2 ── -->
-  <div class="grid grid-cols-1 lg:grid-cols-1 gap-6 mb-6">
-    <div class="card">
-      <h3 class="card-title">Distribuição por Canal</h3>
-      <div style="height:220px"><canvas id="chart-canal"></canvas></div>
     </div>
   </div>
 
   <!-- ── TABLES ROW ── -->
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+    <!-- Vendedores: Qtd | R$ Total | % do Total -->
     <div class="card">
       <h3 class="card-title">Vendedores com Vendas de Serviços</h3>
       <div class="overflow-x-auto">
@@ -206,13 +201,14 @@
               <th class="text-left pb-2">Vendedor</th>
               <th class="text-right pb-2">Qtd</th>
               <th class="text-right pb-2">R$ Total</th>
-              <th class="text-right pb-2">Ticket Médio</th>
+              <th class="text-right pb-2">% do Total</th>
             </tr>
           </thead>
           <tbody id="table-vendedores"></tbody>
         </table>
       </div>
     </div>
+    <!-- Seções detalhado -->
     <div class="card">
       <h3 class="card-title">Serviços por Seção — Detalhado</h3>
       <div class="overflow-x-auto">
@@ -231,12 +227,8 @@
     </div>
   </div>
 
-  <!-- ── VISITAS TÉCNICAS ── -->
+  <!-- ── TOP ITENS ── -->
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-    <div class="card">
-      <h3 class="card-title">Visitas Técnicas por Vendedor</h3>
-      <div class="chart-container"><canvas id="chart-visitas"></canvas></div>
-    </div>
     <div class="card">
       <h3 class="card-title">Top 10 Itens de Serviço</h3>
       <div class="overflow-x-auto">
@@ -562,11 +554,10 @@ function renderAll() {
   const visits   = filteredData.filter(isVisit);
 
   renderKpiMaster(services, visits);
-  renderSecaoCharts(filteredData);   // usa TODOS os dados — seções no eixo X
-  renderCanalChart();
+  renderVendedorChart(services);     // gráfico R$ por vendedor (só serviços)
+  renderSecaoValorChart(services);   // gráfico valor por seção (só serviços)
   renderVendedoresTable(services);
-  renderSecoesTable(filteredData);   // tabela detalhada com todas as seções
-  renderVisitasChart(visits);
+  renderSecoesTable(services);       // tabela seções (só serviços)
   renderTopItens(services);
 }
 
@@ -614,15 +605,32 @@ function mkChart(id, type, data, options = {}) {
 
 const PALETTE = ['#44823C','#BCE05E','#253B35','#B0B676','#9EA5B6','#6aab5e','#8ec87a','#d4e8a0','#7a8f6a','#c5cfd8'];
 
-function renderSecaoCharts(services) {
-  const bySecao = groupByFn(services, r => getSecao(r));
-  const labels = Object.keys(bySecao);
-  const qtds = labels.map(s => bySecao[s].reduce((a, r) => a + getQtd(r), 0));
-  const vals = labels.map(s => bySecao[s].reduce((a, r) => a + getValorItem(r), 0));
+// Gráfico: Vendas de Serviços por Vendedor (R$) — barras horizontais
+function renderVendedorChart(services) {
+  const by = groupByFn(services, r => getLDAP(r));
+  const sorted = Object.entries(by)
+    .map(([ldap, rows]) => ({
+      name: ldap.split(' - ').slice(1).join(' - ') || ldap,
+      val:  rows.reduce((s, r) => s + getValorItem(r), 0),
+    }))
+    .sort((a, b) => b.val - a.val)
+    .slice(0, 10);
 
-  mkChart('chart-secao-qtd', 'bar', {
-    labels, datasets: [{ label: 'Quantidade', data: qtds, backgroundColor: PALETTE }]
-  }, { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } });
+  mkChart('chart-vendedor-val', 'bar', {
+    labels: sorted.map(r => r.name),
+    datasets: [{ label: 'Receita (R$)', data: sorted.map(r => r.val), backgroundColor: PALETTE }]
+  }, {
+    indexAxis: 'y',
+    plugins: { legend: { display: false } },
+    scales: { x: { beginAtZero: true, ticks: { callback: v => 'R$' + fmtK(v) } } }
+  });
+}
+
+// Gráfico: Serviços por Seção — Valor (R$) — mesmo critério dos KPIs
+function renderSecaoValorChart(services) {
+  const by = groupByFn(services, r => getSecao(r));
+  const labels = Object.keys(by);
+  const vals   = labels.map(s => by[s].reduce((a, r) => a + getValorItem(r), 0));
 
   mkChart('chart-secao-valor', 'bar', {
     labels, datasets: [{ label: 'Valor (R$)', data: vals, backgroundColor: PALETTE }]
@@ -632,66 +640,37 @@ function renderSecaoCharts(services) {
   });
 }
 
-function renderCanalChart() {
-  const by = groupByFn(filteredData, r => getCanal(r));
-  const labels = Object.keys(by).map(l => l.split('/').pop());
-  const qtds = Object.values(by).map(rows => new Set(rows.map(r => getPedido(r))).size);
-  const vals  = Object.values(by).map(rows => rows.reduce((s, r) => s + getValorItem(r), 0));
-  mkChart('chart-canal', 'bar', {
-    labels,
-    datasets: [
-      { label: 'Pedidos', data: qtds, backgroundColor: '#44823C', yAxisID: 'y' },
-      { label: 'Receita (R$)', data: vals, backgroundColor: '#BCE05E', yAxisID: 'y2' },
-    ]
-  }, {
-    plugins: { legend: { position: 'top' } },
-    scales: {
-      y:  { beginAtZero: true, position: 'left',  title: { display: true, text: 'Pedidos' } },
-      y2: { beginAtZero: true, position: 'right', grid: { drawOnChartArea: false },
-            ticks: { callback: v => 'R$' + fmtK(v) }, title: { display: true, text: 'Receita' } }
-    }
-  });
-}
-
-function renderVisitasChart(visits) {
-  if (!visits.length) {
-    document.getElementById('chart-visitas').parentElement.innerHTML =
-      '<div class="flex items-center justify-center h-48 text-gray-400 text-sm">Nenhuma visita técnica encontrada<br>Verifique as seções de visita na configuração</div>';
-    return;
-  }
-  const by = groupByFn(visits, r => getLDAP(r));
-  const labels = Object.keys(by).map(s => s.split(' - ').pop()).slice(0, 8);
-  const qtds = Object.values(by).slice(0, 8).map(rows => rows.reduce((a, r) => a + getQtd(r), 0));
-  mkChart('chart-visitas', 'bar', {
-    labels, datasets: [{ label: 'Visitas', data: qtds, backgroundColor: '#44823C' }]
-  }, {
-    indexAxis: 'y', plugins: { legend: { display: false } },
-    scales: { x: { beginAtZero: true } }
-  });
-}
-
 // ───────────────────────────────────────────────
 // TABLES
 // ───────────────────────────────────────────────
 function renderVendedoresTable(services) {
+  const totalVal = services.reduce((s, r) => s + getValorItem(r), 0);
   const by = groupByFn(services, r => getLDAP(r));
   const rows = Object.entries(by)
     .map(([ldap, rows]) => ({
       name: ldap.split(' - ').slice(1).join(' - ') || ldap,
-      qtd: rows.reduce((s, r) => s + getQtd(r), 0),
-      val: rows.reduce((s, r) => s + getValorItem(r), 0),
+      qtd:  rows.reduce((s, r) => s + getQtd(r), 0),
+      val:  rows.reduce((s, r) => s + getValorItem(r), 0),
     }))
     .sort((a, b) => b.val - a.val);
 
-  document.getElementById('table-vendedores').innerHTML = rows.map((r, i) => `
+  document.getElementById('table-vendedores').innerHTML = rows.map((r, i) => {
+    const pct = totalVal > 0 ? (r.val / totalVal * 100).toFixed(1) : '0.0';
+    const barW = Math.round(r.val / totalVal * 50);
+    return `
     <tr class="table-row border-b border-gray-50">
       <td class="py-2 pr-2 text-gray-400 font-mono text-xs">${i + 1}</td>
       <td class="py-2 text-gray-700 font-medium text-xs">${r.name}</td>
       <td class="py-2 text-right font-mono text-xs">${fmtQtd(r.qtd)}</td>
       <td class="py-2 text-right font-mono text-xs" style="color:#44823C">${fmtBRL(r.val)}</td>
-      <td class="py-2 text-right font-mono text-xs" style="color:#253B35">${fmtBRL(r.qtd > 0 ? r.val / r.qtd : 0)}</td>
-    </tr>
-  `).join('') || '<tr><td colspan="5" class="text-center py-8 text-gray-400 text-sm">Nenhum serviço encontrado</td></tr>';
+      <td class="py-2 text-right text-xs">
+        <div class="flex items-center justify-end gap-1">
+          <div class="h-1.5 rounded-full" style="width:${barW}px;background:#BCE05E;opacity:.85"></div>
+          <span class="font-mono" style="color:#253B35">${pct}%</span>
+        </div>
+      </td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="5" class="text-center py-8 text-gray-400 text-sm">Nenhum serviço encontrado</td></tr>';
 }
 
 function renderSecoesTable(services) {
