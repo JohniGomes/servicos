@@ -6,6 +6,7 @@
   <title>Painel de Serviços</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
   <style>
     :root {
       --lm-green:   #44823C;
@@ -68,20 +69,9 @@
 <header class="lm-header shadow-md sticky top-0 z-30">
   <div class="max-w-screen-xl mx-auto flex items-center justify-between px-6 py-3">
 
-    <!-- Logo Leroy Merlin (SVG inline) -->
+    <!-- Logo Leroy Merlin -->
     <div class="flex items-center gap-4">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 80" width="160" height="58" aria-label="Leroy Merlin">
-        <!-- triângulo verde -->
-        <polygon points="110,6 148,66 72,66" fill="#BCE05E"/>
-        <!-- LEROY -->
-        <text x="4" y="42" class="lm-logo-text" fill="white" font-size="22" font-family="Arial Black, Arial" font-weight="900" letter-spacing="1">LEROY</text>
-        <!-- MERLIN -->
-        <text x="108" y="42" class="lm-logo-text" fill="white" font-size="22" font-family="Arial Black, Arial" font-weight="900" letter-spacing="1">MERLIN</text>
-        <!-- tagline -->
-        <text x="50" y="76" fill="#BCE05E" font-size="10" font-family="Georgia, serif" font-style="italic">A casa da sua casa.</text>
-        <!-- underline vermelho tagline -->
-        <line x1="50" y1="78" x2="175" y2="78" stroke="#e11d48" stroke-width="1.5"/>
-      </svg>
+      <img src="logo.jpg" alt="Leroy Merlin" style="height:52px;width:auto;">
 
       <div class="border-l border-white/20 pl-4">
         <h1 class="text-sm font-bold text-white leading-none">Painel de Serviços</h1>
@@ -276,6 +266,9 @@
 </main>
 
 <script>
+// Registra plugin de rótulos de dados globalmente
+Chart.register(ChartDataLabels);
+
 // ───────────────────────────────────────────────
 // CONFIG & STATE
 // ───────────────────────────────────────────────
@@ -523,8 +516,10 @@ function loadDemoData() {
 // FILTERS
 // ───────────────────────────────────────────────
 function populateFilters() {
-  // Vendedor
-  const vendedores = [...new Set(rawData.map(r => getLDAP(r)).filter(Boolean))].sort();
+  const serviceData = rawData.filter(r => isService(r));
+
+  // Vendedor — apenas vendedores com dados de serviço
+  const vendedores = [...new Set(serviceData.map(r => getLDAP(r)).filter(Boolean))].sort();
   const selV = document.getElementById('filter-vendedor');
   selV.innerHTML = '<option value="">Todos</option>';
   vendedores.forEach(v => {
@@ -532,8 +527,8 @@ function populateFilters() {
     const o = document.createElement('option'); o.value = v; o.textContent = nome; selV.appendChild(o);
   });
 
-  // Seção
-  const secoes = [...new Set(rawData.map(r => getSecao(r)).filter(Boolean))].sort();
+  // Seção — apenas seções com dados de serviço
+  const secoes = [...new Set(serviceData.map(r => getSecao(r)).filter(Boolean))].sort();
   const selS = document.getElementById('filter-secao');
   selS.innerHTML = '<option value="">Todas</option>';
   secoes.forEach(s => { const o = document.createElement('option'); o.value = s; o.textContent = s; selS.appendChild(o); });
@@ -652,8 +647,22 @@ function renderVendedorChart(services) {
     datasets: [{ label: 'Receita (R$)', data: sorted.map(r => r.val), backgroundColor: PALETTE }]
   }, {
     indexAxis: 'y',
-    plugins: { legend: { display: false } },
-    scales: { x: { beginAtZero: true, ticks: { callback: v => 'R$' + fmtK(v) } } }
+    plugins: {
+      legend: { display: false },
+      datalabels: {
+        anchor: 'end',
+        align: 'end',
+        color: '#253B35',
+        font: { size: 11, weight: '600' },
+        formatter: v => 'R$ ' + fmtK(v),
+        clip: false,
+      }
+    },
+    layout: { padding: { right: 60 } },
+    scales: {
+      x: { display: false, grid: { display: false }, border: { display: false } },
+      y: { grid: { display: false }, border: { display: false } }
+    }
   });
 }
 
@@ -666,8 +675,22 @@ function renderSecaoValorChart(services) {
   mkChart('chart-secao-valor', 'bar', {
     labels, datasets: [{ label: 'Valor (R$)', data: vals, backgroundColor: PALETTE }]
   }, {
-    plugins: { legend: { display: false } },
-    scales: { y: { beginAtZero: true, ticks: { callback: v => 'R$' + fmtK(v) } } }
+    plugins: {
+      legend: { display: false },
+      datalabels: {
+        anchor: 'end',
+        align: 'end',
+        color: '#253B35',
+        font: { size: 11, weight: '600' },
+        formatter: v => 'R$ ' + fmtK(v),
+        clip: false,
+      }
+    },
+    layout: { padding: { top: 28 } },
+    scales: {
+      y: { display: false, grid: { display: false }, border: { display: false } },
+      x: { grid: { display: false }, border: { display: false } }
+    }
   });
 }
 
