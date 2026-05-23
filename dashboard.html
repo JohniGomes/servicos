@@ -105,47 +105,53 @@
 
   <!-- FILTER BAR -->
   <div class="filter-bar">
-    <!-- linha 1: datas lado a lado sempre -->
-    <div class="grid grid-cols-2 gap-2 mb-2 sm:hidden">
-      <div>
-        <label class="text-xs text-gray-500 font-medium block mb-1">Data início</label>
-        <input type="date" id="filter-start-m" class="w-full text-xs border border-gray-200 rounded-lg px-2 py-1.5" />
+    <!-- mobile: 4 filtros em grid 2 colunas + botões -->
+    <div class="sm:hidden">
+      <div class="grid grid-cols-2 gap-2 mb-2">
+        <div>
+          <label class="text-xs text-gray-500 font-medium block mb-1">Data início</label>
+          <select id="filter-start-m" class="w-full text-xs border border-gray-200 rounded-lg px-2 py-1.5">
+            <option value="">Todas</option>
+          </select>
+        </div>
+        <div>
+          <label class="text-xs text-gray-500 font-medium block mb-1">Data fim</label>
+          <select id="filter-end-m" class="w-full text-xs border border-gray-200 rounded-lg px-2 py-1.5">
+            <option value="">Todas</option>
+          </select>
+        </div>
+        <div>
+          <label class="text-xs text-gray-500 font-medium block mb-1">Vendedor</label>
+          <select id="filter-vendedor-m" class="w-full text-xs border border-gray-200 rounded-lg px-2 py-1.5">
+            <option value="">Todos</option>
+          </select>
+        </div>
+        <div>
+          <label class="text-xs text-gray-500 font-medium block mb-1">Seção</label>
+          <select id="filter-secao-m" class="w-full text-xs border border-gray-200 rounded-lg px-2 py-1.5">
+            <option value="">Todas</option>
+          </select>
+        </div>
       </div>
-      <div>
-        <label class="text-xs text-gray-500 font-medium block mb-1">Data fim</label>
-        <input type="date" id="filter-end-m" class="w-full text-xs border border-gray-200 rounded-lg px-2 py-1.5" />
+      <div class="flex gap-2">
+        <button onclick="applyFiltersMobile()" class="flex-1 text-sm btn-primary py-1.5 rounded-lg font-semibold">Filtrar</button>
+        <button onclick="clearFilters()" class="flex-1 text-sm btn-neutral py-1.5 rounded-lg">Limpar</button>
       </div>
-    </div>
-    <!-- linha 2: selects lado a lado no mobile -->
-    <div class="grid grid-cols-2 gap-2 mb-2 sm:hidden">
-      <div>
-        <label class="text-xs text-gray-500 font-medium block mb-1">Vendedor</label>
-        <select id="filter-vendedor-m" class="w-full text-xs border border-gray-200 rounded-lg px-2 py-1.5">
-          <option value="">Todos</option>
-        </select>
-      </div>
-      <div>
-        <label class="text-xs text-gray-500 font-medium block mb-1">Seção</label>
-        <select id="filter-secao-m" class="w-full text-xs border border-gray-200 rounded-lg px-2 py-1.5">
-          <option value="">Todas</option>
-        </select>
-      </div>
-    </div>
-    <!-- linha 3: botões no mobile -->
-    <div class="flex gap-2 sm:hidden">
-      <button onclick="applyFiltersMobile()" class="flex-1 text-sm btn-primary py-1.5 rounded-lg font-semibold">Filtrar</button>
-      <button onclick="clearFilters()" class="flex-1 text-sm btn-neutral py-1.5 rounded-lg">Limpar</button>
     </div>
 
     <!-- versão desktop (sm+) -->
     <div class="hidden sm:flex flex-wrap items-end gap-3">
       <div class="flex-1 min-w-[140px]">
         <label class="text-xs text-gray-500 font-medium block mb-1">Data início</label>
-        <input type="date" id="filter-start" class="w-full text-sm border border-gray-200 rounded-lg px-2 py-1.5" />
+        <select id="filter-start" class="w-full text-sm border border-gray-200 rounded-lg px-2 py-1.5">
+          <option value="">Todas</option>
+        </select>
       </div>
       <div class="flex-1 min-w-[140px]">
         <label class="text-xs text-gray-500 font-medium block mb-1">Data fim</label>
-        <input type="date" id="filter-end" class="w-full text-sm border border-gray-200 rounded-lg px-2 py-1.5" />
+        <select id="filter-end" class="w-full text-sm border border-gray-200 rounded-lg px-2 py-1.5">
+          <option value="">Todas</option>
+        </select>
       </div>
       <div class="flex-1 min-w-[140px]">
         <label class="text-xs text-gray-500 font-medium block mb-1">Vendedor</label>
@@ -533,6 +539,13 @@ function $html(id, html) {
 function populateFilters() {
   const serviceData = rawData.filter(r => isService(r));
 
+  // Datas disponíveis (para selects mobile)
+  const datas = [...new Set(rawData.map(r => getData(r)).filter(Boolean))].sort();
+  const fmtDate = d => { try { const [y,m,dd] = d.split('-'); return `${dd}/${m}/${y}`; } catch(e) { return d; } };
+  const dOpts = '<option value="">Todas</option>' + datas.map(d => `<option value="${d}">${fmtDate(d)}</option>`).join('');
+  $html('filter-start', dOpts);
+  $html('filter-end',   dOpts);
+
   // Vendedor — apenas vendedores com dados de serviço
   const vendedores = [...new Set(serviceData.map(r => getLDAP(r)).filter(Boolean))].sort();
   const vOpts = '<option value="">Todos</option>' +
@@ -676,10 +689,19 @@ function renderVendedorChart(services) {
         clip: false,
       }
     },
-    layout: { padding: { right: 60 } },
+    layout: { padding: { right: 65 } },
     scales: {
       x: { display: false, grid: { display: false }, border: { display: false } },
-      y: { grid: { display: false }, border: { display: false } }
+      y: {
+        grid: { display: false }, border: { display: false },
+        ticks: {
+          font: { size: 11 },
+          callback: function(val) {
+            const lbl = this.getLabelForValue(val);
+            return lbl.length > 18 ? lbl.slice(0, 17) + '…' : lbl;
+          }
+        }
+      }
     }
   });
 }
@@ -707,7 +729,18 @@ function renderSecaoValorChart(services) {
     layout: { padding: { top: 28 } },
     scales: {
       y: { display: false, grid: { display: false }, border: { display: false } },
-      x: { grid: { display: false }, border: { display: false } }
+      x: {
+        grid: { display: false }, border: { display: false },
+        ticks: {
+          font: { size: 11 },
+          maxRotation: 0,
+          minRotation: 0,
+          callback: function(val) {
+            const lbl = this.getLabelForValue(val);
+            return lbl.length > 12 ? lbl.slice(0, 11) + '…' : lbl;
+          }
+        }
+      }
     }
   });
 }
