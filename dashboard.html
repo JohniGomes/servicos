@@ -564,7 +564,7 @@ function renderKpiMaster(services, visits) {
   const sellers  = new Set(services.filter(r => getLDAP(r) && !getLDAP(r).toUpperCase().includes('ECOMMERCE')).map(r => getLDAP(r)));
   const secoes   = new Set(services.map(r => getSecao(r)).filter(Boolean));
 
-  // Ordem: Serviços Vendidos | Visitas Técnicas | Receita de Serviços | Vendedores Ativos | Seções de Serviço
+  // Ordem: Serviços Vendidos | Visitas Técnicas | Receita de Serviços | Vendedores | Seções com Serviço
   const cards = [
     { label: 'Serviços Vendidos',   value: fmtQtd(totalQtd),  sub: '',                      color: 'green',  icon: '🛠' },
     { label: 'Visitas Técnicas',    value: fmtQtd(visitQtd),  sub: '',                       color: 'purple', icon: '🔍' },
