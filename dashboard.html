@@ -44,6 +44,19 @@
     /* section headings */
     .section-title { color: #253B35; font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 1rem; }
 
+    /* mobile */
+    @media (max-width: 640px) {
+      .lm-header .px-6 { padding-left: 1rem; padding-right: 1rem; }
+      main.px-6 { padding-left: .75rem; padding-right: .75rem; }
+      .chart-container { height: 220px; }
+      .filter-bar { padding: 12px; gap: 12px; }
+      .filter-bar > div { width: 100%; }
+      .filter-bar select, .filter-bar input[type=date] { width: 100%; }
+      .kpi-card { padding: .85rem; }
+      .kpi-card .text-2xl { font-size: 1.3rem; }
+      .card { padding: 1rem; }
+    }
+
     /* header gradient */
     .lm-header { background: linear-gradient(135deg, #253B35 0%, #44823C 100%); }
 
@@ -67,97 +80,60 @@
 
 <!-- ── HEADER ── -->
 <header class="lm-header shadow-md sticky top-0 z-30">
-  <div class="max-w-screen-xl mx-auto flex items-center justify-between px-6 py-3">
+  <div class="max-w-screen-xl mx-auto flex items-center justify-between px-4 sm:px-6 py-2 sm:py-3">
 
     <!-- Logo Leroy Merlin -->
     <div class="flex items-center gap-4">
-      <img src="logo.jpg" alt="Leroy Merlin" style="height:52px;width:auto;">
+      <img src="logo.jpg" alt="Leroy Merlin" style="height:40px;width:auto;" class="sm:h-[52px]">
 
-      <div class="border-l border-white/20 pl-4">
-        <h1 class="text-sm font-bold text-white leading-none">Painel de Serviços</h1>
-        <p class="text-xs text-lime-200 mt-0.5" id="last-update">Carregando...</p>
+      <div class="border-l border-white/20 pl-3 sm:pl-4">
+        <h1 class="text-xs sm:text-sm font-bold text-white leading-none">Painel de Serviços</h1>
+        <p class="text-xs text-lime-200 mt-0.5 truncate max-w-[160px] sm:max-w-none" id="last-update">Carregando...</p>
       </div>
     </div>
 
     <div class="flex items-center gap-2">
       <div id="loader" class="loader hidden"></div>
       <button onclick="loadData()" class="text-xs btn-secondary px-3 py-1.5 rounded-lg font-semibold">↻ Atualizar</button>
-      <button onclick="document.getElementById('config-panel').classList.toggle('open')" class="text-xs bg-white/10 text-white px-3 py-1.5 rounded-lg hover:bg-white/20 font-medium">⚙ Configurar</button>
     </div>
   </div>
 </header>
 
-<!-- ── CONFIG PANEL ── -->
-<div id="config-panel" style="background:#f5f8f0;border-bottom:2px solid #BCE05E;" class="px-6 py-4">
-  <div class="max-w-screen-xl mx-auto">
-    <h2 class="font-semibold mb-3 text-sm" style="color:#253B35">⚙ Configuração do Painel</h2>
-
-    <!-- Passo a passo Apps Script -->
-    <div class="mb-4 p-3 rounded-xl text-xs" style="background:#e8f4e3;border:1px solid #BCE05E;">
-      <p class="font-bold mb-2" style="color:#253B35">📋 Como conectar via Apps Script:</p>
-      <ol class="list-decimal pl-4 space-y-1 text-gray-700">
-        <li>No Google Sheets: <b>Extensões → Apps Script</b></li>
-        <li>Cole o conteúdo do arquivo <code class="bg-white px-1 rounded">Code.gs</code> e salve</li>
-        <li>Clique em <b>Implantar → Nova implantação</b></li>
-        <li>Tipo: <b>App da Web</b> · Acesso: <b>Qualquer pessoa</b> → Implantar</li>
-        <li>Copie a URL gerada e cole no campo abaixo</li>
-      </ol>
-    </div>
-
-    <div class="grid grid-cols-1 gap-4">
-      <div>
-        <label class="block text-xs font-medium text-gray-700 mb-1">
-          🔗 URL do Apps Script
-          <span class="text-gray-400 font-normal">(termina com /exec)</span>
-        </label>
-        <input id="sheet-csv-url" type="text"
-          placeholder="https://script.google.com/macros/s/.../exec"
-          class="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 font-mono" />
-      </div>
-      <div class="p-3 rounded-lg text-xs" style="background:#e8f4e3;border:1px solid #BCE05E">
-        <p style="color:#253B35"><b>Critérios automáticos de classificação:</b></p>
-        <p class="text-gray-600 mt-1">🛠 <b>Serviços:</b> coluna M (Status do produto) começa com <code class="bg-white px-1 rounded">SERVICO</code></p>
-        <p class="text-gray-600 mt-1">🔍 <b>Visitas Técnicas:</b> coluna J (Descrição) começa com <code class="bg-white px-1 rounded">Visita</code></p>
-      </div>
-    </div>
-    <div class="mt-3 flex gap-2">
-      <button onclick="saveConfig(); loadData();" class="text-sm btn-primary px-4 py-2 rounded-lg font-semibold">Salvar e Atualizar</button>
-      <button onclick="loadDemoData()" class="text-sm btn-secondary px-4 py-2 rounded-lg font-semibold">Carregar Dados Demo</button>
-    </div>
-  </div>
-</div>
 
 <!-- ── MAIN ── -->
-<main class="max-w-screen-xl mx-auto px-6 py-6" id="main-content">
+<main class="max-w-screen-xl mx-auto px-3 sm:px-6 py-4 sm:py-6" id="main-content">
 
   <!-- FILTER BAR -->
-  <div class="filter-bar flex flex-wrap items-center gap-4">
-    <div>
-      <label class="text-xs text-gray-500 font-medium block mb-1">Período</label>
-      <div class="flex gap-2">
-        <input type="date" id="filter-start" class="text-sm border border-gray-200 rounded-lg px-2 py-1" />
-        <input type="date" id="filter-end" class="text-sm border border-gray-200 rounded-lg px-2 py-1" />
-      </div>
+  <div class="filter-bar flex flex-wrap items-end gap-3">
+    <div class="flex-1 min-w-[140px]">
+      <label class="text-xs text-gray-500 font-medium block mb-1">Data início</label>
+      <input type="date" id="filter-start" class="w-full text-sm border border-gray-200 rounded-lg px-2 py-1.5" />
     </div>
-    <div>
+    <div class="flex-1 min-w-[140px]">
+      <label class="text-xs text-gray-500 font-medium block mb-1">Data fim</label>
+      <input type="date" id="filter-end" class="w-full text-sm border border-gray-200 rounded-lg px-2 py-1.5" />
+    </div>
+    <div class="flex-1 min-w-[140px]">
       <label class="text-xs text-gray-500 font-medium block mb-1">Vendedor</label>
-      <select id="filter-vendedor" class="text-sm border border-gray-200 rounded-lg px-2 py-1.5">
+      <select id="filter-vendedor" class="w-full text-sm border border-gray-200 rounded-lg px-2 py-1.5">
         <option value="">Todos</option>
       </select>
     </div>
-    <div>
+    <div class="flex-1 min-w-[140px]">
       <label class="text-xs text-gray-500 font-medium block mb-1">Seção</label>
-      <select id="filter-secao" class="text-sm border border-gray-200 rounded-lg px-2 py-1.5">
+      <select id="filter-secao" class="w-full text-sm border border-gray-200 rounded-lg px-2 py-1.5">
         <option value="">Todas</option>
       </select>
     </div>
-    <button onclick="applyFilters()" class="self-end text-sm btn-primary px-4 py-1.5 rounded-lg font-semibold">Filtrar</button>
-    <button onclick="clearFilters()" class="self-end text-sm btn-neutral px-3 py-1.5 rounded-lg">Limpar</button>
+    <div class="flex gap-2">
+      <button onclick="applyFilters()" class="text-sm btn-primary px-4 py-1.5 rounded-lg font-semibold whitespace-nowrap">Filtrar</button>
+      <button onclick="clearFilters()" class="text-sm btn-neutral px-3 py-1.5 rounded-lg whitespace-nowrap">Limpar</button>
+    </div>
   </div>
 
   <!-- ── KPIs MASTER ── -->
   <section class="mb-8">
-    <h2 class="section-title">KPIs Master — Serviços</h2>
+    <h2 class="section-title">KPIs Master</h2>
     <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4" id="kpi-master"></div>
   </section>
 
@@ -238,7 +214,7 @@
         <h3 class="card-title mb-0">Penetração de Serviços no Pedido</h3>
         <span id="pct-geral-badge" class="badge text-xs font-bold px-2 py-1 rounded-full" style="background:#e6f2e1;color:#44823C"></span>
       </div>
-      <p class="text-xs text-gray-400 mb-3">% do valor de serviços sobre o total do pedido (col E), por seção</p>
+      <p class="text-xs text-gray-400 mb-3">% do valor de serviços sobre o total do pedido</p>
       <div class="overflow-x-auto">
         <table class="w-full text-sm">
           <thead>
@@ -277,16 +253,10 @@ let rawData = [];
 let filteredData = [];
 const charts = {};
 
-function loadConfig() {
-  const saved = JSON.parse(localStorage.getItem(CFG_KEY) || '{}');
-  if (saved.csvUrl) document.getElementById('sheet-csv-url').value = saved.csvUrl;
-}
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxrfxOUIuYQ_4COBkwSUTxDf9qXAOlTOAGkEAuvNpaHt98DUEN3VGKGaKB1sVyrPZy6/exec';
 
-function saveConfig() {
-  localStorage.setItem(CFG_KEY, JSON.stringify({
-    csvUrl: document.getElementById('sheet-csv-url').value.trim(),
-  }));
-}
+function loadConfig() { /* URL fixa — nada a carregar */ }
+function saveConfig() { /* URL fixa — nada a salvar */ }
 
 // Coluna M = "Status do produto" — serviços começam com SERVICO
 function isService(row) {
@@ -310,13 +280,7 @@ function getSecao(row) {
 // DATA LOADING — via Google Apps Script
 // ───────────────────────────────────────────────
 async function loadData() {
-  let url = document.getElementById('sheet-csv-url').value.trim();
-  if (!url) { showNoData(); return; }
-
-  // Adiciona cache-bust
-  url += (url.includes('?') ? '&' : '?') + 'cb=' + Date.now();
-
-  saveConfig();
+  let url = APPS_SCRIPT_URL + '?cb=' + Date.now();
   setLoading(true);
 
   try {
@@ -337,7 +301,8 @@ async function loadData() {
     renderAll();
 
     const ts = new Date().toLocaleString('pt-BR');
-    document.getElementById('last-update').textContent = `Atualizado: ${ts} — ${rawData.length} registros`;
+    const svcCount = rawData.filter(r => isService(r)).length;
+    document.getElementById('last-update').textContent = `Atualizado: ${ts} — ${svcCount} serviços`;
     showToast(`✅ ${rawData.length} registros carregados!`, 'green');
 
   } catch (e) {
@@ -509,7 +474,8 @@ function loadDemoData() {
   populateFilters();
   filteredData = [...rawData];
   renderAll();
-  document.getElementById('last-update').textContent = 'Demo carregado: ' + new Date().toLocaleString('pt-BR');
+  const svcCountDemo = rawData.filter(r => isService(r)).length;
+  document.getElementById('last-update').textContent = `Demo carregado: ${new Date().toLocaleString('pt-BR')} — ${svcCountDemo} serviços`;
 }
 
 // ───────────────────────────────────────────────
@@ -600,8 +566,8 @@ function renderKpiMaster(services, visits) {
 
   // Ordem: Serviços Vendidos | Visitas Técnicas | Receita de Serviços | Vendedores Ativos | Seções de Serviço
   const cards = [
-    { label: 'Serviços Vendidos',   value: fmtQtd(totalQtd),  sub: 'unidades',             color: 'green',  icon: '🛠' },
-    { label: 'Visitas Técnicas',    value: fmtQtd(visitQtd),  sub: fmtBRL(visitVal),        color: 'purple', icon: '🔍' },
+    { label: 'Serviços Vendidos',   value: fmtQtd(totalQtd),  sub: '',                      color: 'green',  icon: '🛠' },
+    { label: 'Visitas Técnicas',    value: fmtQtd(visitQtd),  sub: '',                       color: 'purple', icon: '🔍' },
     { label: 'Receita de Serviços', value: fmtBRL(totalVal),  sub: 'valor total',           color: 'blue',   icon: '💰' },
     { label: 'Vendedores Ativos',   value: sellers.size,       sub: 'com venda de serviço', color: 'teal',   icon: '👤' },
     { label: 'Seções de Serviço',   value: secoes.size,        sub: 'seções distintas',     color: 'rose',   icon: '📂' },
@@ -611,7 +577,7 @@ function renderKpiMaster(services, visits) {
     <div class="kpi-card bg-white rounded-2xl shadow-sm p-4 border-l-4" style="border-color:var(--${c.color})">
       <div class="flex items-center justify-between mb-2">
         <span class="text-xl">${c.icon}</span>
-        <span class="badge" style="background:var(--${c.color}-light);color:var(--${c.color})">${c.sub}</span>
+        ${c.sub ? `<span class="badge" style="background:var(--${c.color}-light);color:var(--${c.color})">${c.sub}</span>` : ''}
       </div>
       <div class="text-2xl font-bold text-gray-800">${c.value}</div>
       <div class="text-xs text-gray-500 mt-1">${c.label}</div>
@@ -890,12 +856,7 @@ function showNoData() {
 // INIT
 // ───────────────────────────────────────────────
 loadConfig();
-if (document.getElementById('sheet-csv-url').value) {
-  loadData();
-} else {
-  showNoData();
-  document.getElementById('last-update').textContent = 'Nenhuma fonte configurada';
-}
+loadData();
 </script>
 </body>
 </html>
