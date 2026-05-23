@@ -303,7 +303,7 @@ async function loadData() {
     const ts = new Date().toLocaleString('pt-BR');
     const svcCount = rawData.filter(r => isService(r)).length;
     document.getElementById('last-update').textContent = `Atualizado: ${ts} — ${svcCount} serviços`;
-    showToast(`✅ ${rawData.length} registros carregados!`, 'green');
+    showToast(`✅ ${svcCount} serviços carregados!`, 'green');
 
   } catch (e) {
     showErroAcesso(e.message);
@@ -569,8 +569,8 @@ function renderKpiMaster(services, visits) {
     { label: 'Serviços Vendidos',   value: fmtQtd(totalQtd),  sub: '',                      color: 'green',  icon: '🛠' },
     { label: 'Visitas Técnicas',    value: fmtQtd(visitQtd),  sub: '',                       color: 'purple', icon: '🔍' },
     { label: 'Receita de Serviços', value: fmtBRL(totalVal),  sub: 'valor total',           color: 'blue',   icon: '💰' },
-    { label: 'Vendedores Ativos',   value: sellers.size,       sub: 'com venda de serviço', color: 'teal',   icon: '👤' },
-    { label: 'Seções de Serviço',   value: secoes.size,        sub: 'seções distintas',     color: 'rose',   icon: '📂' },
+    { label: 'Vendedores',           value: sellers.size,       sub: 'com venda de serviço', color: 'teal',   icon: '👤' },
+    { label: 'Seções com Serviço',  value: secoes.size,        sub: 'seções distintas',     color: 'rose',   icon: '📂' },
   ];
 
   document.getElementById('kpi-master').innerHTML = cards.map(c => `
