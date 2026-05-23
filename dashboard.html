@@ -88,7 +88,7 @@
 
       <div class="border-l border-white/20 pl-3 sm:pl-4">
         <h1 class="text-xs sm:text-sm font-bold text-white leading-none">Painel de Serviços</h1>
-        <p class="text-xs text-lime-200 mt-0.5 truncate max-w-[160px] sm:max-w-none" id="last-update">Carregando...</p>
+        <p class="text-[10px] sm:text-xs text-lime-200 mt-0.5 leading-tight" id="last-update">Carregando...</p>
       </div>
     </div>
 
@@ -104,30 +104,65 @@
 <main class="max-w-screen-xl mx-auto px-3 sm:px-6 py-4 sm:py-6" id="main-content">
 
   <!-- FILTER BAR -->
-  <div class="filter-bar flex flex-wrap items-end gap-3">
-    <div class="flex-1 min-w-[140px]">
-      <label class="text-xs text-gray-500 font-medium block mb-1">Data início</label>
-      <input type="date" id="filter-start" class="w-full text-sm border border-gray-200 rounded-lg px-2 py-1.5" />
+  <div class="filter-bar">
+    <!-- linha 1: datas lado a lado sempre -->
+    <div class="grid grid-cols-2 gap-2 mb-2 sm:hidden">
+      <div>
+        <label class="text-xs text-gray-500 font-medium block mb-1">Data início</label>
+        <input type="date" id="filter-start-m" class="w-full text-xs border border-gray-200 rounded-lg px-2 py-1.5" />
+      </div>
+      <div>
+        <label class="text-xs text-gray-500 font-medium block mb-1">Data fim</label>
+        <input type="date" id="filter-end-m" class="w-full text-xs border border-gray-200 rounded-lg px-2 py-1.5" />
+      </div>
     </div>
-    <div class="flex-1 min-w-[140px]">
-      <label class="text-xs text-gray-500 font-medium block mb-1">Data fim</label>
-      <input type="date" id="filter-end" class="w-full text-sm border border-gray-200 rounded-lg px-2 py-1.5" />
+    <!-- linha 2: selects lado a lado no mobile -->
+    <div class="grid grid-cols-2 gap-2 mb-2 sm:hidden">
+      <div>
+        <label class="text-xs text-gray-500 font-medium block mb-1">Vendedor</label>
+        <select id="filter-vendedor-m" class="w-full text-xs border border-gray-200 rounded-lg px-2 py-1.5">
+          <option value="">Todos</option>
+        </select>
+      </div>
+      <div>
+        <label class="text-xs text-gray-500 font-medium block mb-1">Seção</label>
+        <select id="filter-secao-m" class="w-full text-xs border border-gray-200 rounded-lg px-2 py-1.5">
+          <option value="">Todas</option>
+        </select>
+      </div>
     </div>
-    <div class="flex-1 min-w-[140px]">
-      <label class="text-xs text-gray-500 font-medium block mb-1">Vendedor</label>
-      <select id="filter-vendedor" class="w-full text-sm border border-gray-200 rounded-lg px-2 py-1.5">
-        <option value="">Todos</option>
-      </select>
+    <!-- linha 3: botões no mobile -->
+    <div class="flex gap-2 sm:hidden">
+      <button onclick="applyFiltersMobile()" class="flex-1 text-sm btn-primary py-1.5 rounded-lg font-semibold">Filtrar</button>
+      <button onclick="clearFilters()" class="flex-1 text-sm btn-neutral py-1.5 rounded-lg">Limpar</button>
     </div>
-    <div class="flex-1 min-w-[140px]">
-      <label class="text-xs text-gray-500 font-medium block mb-1">Seção</label>
-      <select id="filter-secao" class="w-full text-sm border border-gray-200 rounded-lg px-2 py-1.5">
-        <option value="">Todas</option>
-      </select>
-    </div>
-    <div class="flex gap-2">
-      <button onclick="applyFilters()" class="text-sm btn-primary px-4 py-1.5 rounded-lg font-semibold whitespace-nowrap">Filtrar</button>
-      <button onclick="clearFilters()" class="text-sm btn-neutral px-3 py-1.5 rounded-lg whitespace-nowrap">Limpar</button>
+
+    <!-- versão desktop (sm+) -->
+    <div class="hidden sm:flex flex-wrap items-end gap-3">
+      <div class="flex-1 min-w-[140px]">
+        <label class="text-xs text-gray-500 font-medium block mb-1">Data início</label>
+        <input type="date" id="filter-start" class="w-full text-sm border border-gray-200 rounded-lg px-2 py-1.5" />
+      </div>
+      <div class="flex-1 min-w-[140px]">
+        <label class="text-xs text-gray-500 font-medium block mb-1">Data fim</label>
+        <input type="date" id="filter-end" class="w-full text-sm border border-gray-200 rounded-lg px-2 py-1.5" />
+      </div>
+      <div class="flex-1 min-w-[140px]">
+        <label class="text-xs text-gray-500 font-medium block mb-1">Vendedor</label>
+        <select id="filter-vendedor" class="w-full text-sm border border-gray-200 rounded-lg px-2 py-1.5">
+          <option value="">Todos</option>
+        </select>
+      </div>
+      <div class="flex-1 min-w-[140px]">
+        <label class="text-xs text-gray-500 font-medium block mb-1">Seção</label>
+        <select id="filter-secao" class="w-full text-sm border border-gray-200 rounded-lg px-2 py-1.5">
+          <option value="">Todas</option>
+        </select>
+      </div>
+      <div class="flex gap-2">
+        <button onclick="applyFilters()" class="text-sm btn-primary px-4 py-1.5 rounded-lg font-semibold whitespace-nowrap">Filtrar</button>
+        <button onclick="clearFilters()" class="text-sm btn-neutral px-3 py-1.5 rounded-lg whitespace-nowrap">Limpar</button>
+      </div>
     </div>
   </div>
 
@@ -481,47 +516,64 @@ function loadDemoData() {
 // ───────────────────────────────────────────────
 // FILTERS
 // ───────────────────────────────────────────────
+// Retorna o elemento por id, tentando sufixo -m se não achar (mobile duplicates)
+function $id(id) { return document.getElementById(id) || document.getElementById(id + '-m') || { value: '', innerHTML: '' }; }
+function $val(id) {
+  const d = document.getElementById(id);
+  const m = document.getElementById(id + '-m');
+  return (d && d.value) || (m && m.value) || '';
+}
+function $set(id, val) {
+  [id, id + '-m'].forEach(i => { const el = document.getElementById(i); if (el) el.value = val; });
+}
+function $html(id, html) {
+  [id, id + '-m'].forEach(i => { const el = document.getElementById(i); if (el) el.innerHTML = html; });
+}
+
 function populateFilters() {
   const serviceData = rawData.filter(r => isService(r));
 
   // Vendedor — apenas vendedores com dados de serviço
   const vendedores = [...new Set(serviceData.map(r => getLDAP(r)).filter(Boolean))].sort();
-  const selV = document.getElementById('filter-vendedor');
-  selV.innerHTML = '<option value="">Todos</option>';
-  vendedores.forEach(v => {
-    const nome = v.split(' - ').slice(1).join(' - ') || v;
-    const o = document.createElement('option'); o.value = v; o.textContent = nome; selV.appendChild(o);
-  });
+  const vOpts = '<option value="">Todos</option>' +
+    vendedores.map(v => { const nome = v.split(' - ').slice(1).join(' - ') || v; return `<option value="${v}">${nome}</option>`; }).join('');
+  $html('filter-vendedor', vOpts);
 
   // Seção — apenas seções com dados de serviço
   const secoes = [...new Set(serviceData.map(r => getSecao(r)).filter(Boolean))].sort();
-  const selS = document.getElementById('filter-secao');
-  selS.innerHTML = '<option value="">Todas</option>';
-  secoes.forEach(s => { const o = document.createElement('option'); o.value = s; o.textContent = s; selS.appendChild(o); });
+  const sOpts = '<option value="">Todas</option>' + secoes.map(s => `<option value="${s}">${s}</option>`).join('');
+  $html('filter-secao', sOpts);
 }
 
 function applyFilters() {
-  const start   = document.getElementById('filter-start').value;
-  const end     = document.getElementById('filter-end').value;
-  const vendedor = document.getElementById('filter-vendedor').value;
-  const secao   = document.getElementById('filter-secao').value;
+  const start    = $val('filter-start');
+  const end      = $val('filter-end');
+  const vendedor = $val('filter-vendedor');
+  const secao    = $val('filter-secao');
 
   filteredData = rawData.filter(r => {
     const d = getData(r);
-    if (start   && d < start) return false;
-    if (end     && d > end)   return false;
+    if (start    && d < start) return false;
+    if (end      && d > end)   return false;
     if (vendedor && getLDAP(r) !== vendedor) return false;
-    if (secao   && getSecao(r) !== secao)   return false;
+    if (secao    && getSecao(r) !== secao)   return false;
     return true;
   });
   renderAll();
 }
 
+function applyFiltersMobile() {
+  // Sincroniza valores dos inputs mobile para os desktop antes de filtrar
+  ['filter-start','filter-end','filter-vendedor','filter-secao'].forEach(id => {
+    const m = document.getElementById(id + '-m');
+    const d = document.getElementById(id);
+    if (m && d) d.value = m.value;
+  });
+  applyFilters();
+}
+
 function clearFilters() {
-  document.getElementById('filter-start').value    = '';
-  document.getElementById('filter-end').value      = '';
-  document.getElementById('filter-vendedor').value = '';
-  document.getElementById('filter-secao').value    = '';
+  ['filter-start','filter-end','filter-vendedor','filter-secao'].forEach(id => $set(id, ''));
   filteredData = [...rawData];
   renderAll();
 }
@@ -679,11 +731,11 @@ function renderVendedoresTable(services) {
     const barW = Math.round(r.val / totalVal * 50);
     return `
     <tr class="table-row border-b border-gray-50">
-      <td class="py-2 pr-2 text-gray-400 font-mono text-xs">${i + 1}</td>
+      <td class="py-2 pr-2 text-gray-400 font-mono text-xs whitespace-nowrap">${i + 1}</td>
       <td class="py-2 text-gray-700 font-medium text-xs">${r.name}</td>
-      <td class="py-2 text-right font-mono text-xs">${fmtQtd(r.qtd)}</td>
-      <td class="py-2 text-right font-mono text-xs" style="color:#44823C">${fmtBRL(r.val)}</td>
-      <td class="py-2 text-right text-xs">
+      <td class="py-2 text-right font-mono text-xs whitespace-nowrap">${fmtQtd(r.qtd)}</td>
+      <td class="py-2 text-right font-mono text-xs whitespace-nowrap" style="color:#44823C">${fmtBRL(r.val)}</td>
+      <td class="py-2 text-right text-xs whitespace-nowrap">
         <div class="flex items-center justify-end gap-1">
           <div class="h-1.5 rounded-full" style="width:${barW}px;background:#BCE05E;opacity:.85"></div>
           <span class="font-mono" style="color:#253B35">${pct}%</span>
@@ -707,9 +759,9 @@ function renderSecoesTable(services) {
   document.getElementById('table-secoes').innerHTML = rows.map(r => `
     <tr class="table-row border-b border-gray-50">
       <td class="py-2 text-gray-700 text-xs font-medium">${r.sec}</td>
-      <td class="py-2 text-right font-mono text-xs">${fmtQtd(r.qtd)}</td>
-      <td class="py-2 text-right font-mono text-xs" style="color:#44823C">${fmtBRL(r.val)}</td>
-      <td class="py-2 text-right text-xs">
+      <td class="py-2 text-right font-mono text-xs whitespace-nowrap">${fmtQtd(r.qtd)}</td>
+      <td class="py-2 text-right font-mono text-xs whitespace-nowrap" style="color:#44823C">${fmtBRL(r.val)}</td>
+      <td class="py-2 text-right text-xs whitespace-nowrap">
         <div class="flex items-center justify-end gap-1">
           <div class="h-1.5 rounded-full" style="width:${Math.round(r.val/totalVal*60)}px;background:#BCE05E;opacity:.8"></div>
           <span class="font-mono">${totalVal > 0 ? (r.val/totalVal*100).toFixed(1) : 0}%</span>
@@ -733,8 +785,8 @@ function renderTopItens(services) {
   document.getElementById('table-top-itens').innerHTML = rows.map(r => `
     <tr class="table-row border-b border-gray-50">
       <td class="py-2 text-gray-700 text-xs">${r.desc}</td>
-      <td class="py-2 text-right font-mono text-xs">${fmtQtd(r.qtd)}</td>
-      <td class="py-2 text-right font-mono text-xs" style="color:#44823C">${fmtBRL(r.val)}</td>
+      <td class="py-2 text-right font-mono text-xs whitespace-nowrap">${fmtQtd(r.qtd)}</td>
+      <td class="py-2 text-right font-mono text-xs whitespace-nowrap" style="color:#44823C">${fmtBRL(r.val)}</td>
     </tr>
   `).join('') || '<tr><td colspan="3" class="text-center py-8 text-gray-400 text-sm">Nenhum item encontrado</td></tr>';
 }
@@ -783,9 +835,9 @@ function renderPenetracao(services, allData) {
     return `
     <tr class="table-row border-b border-gray-50">
       <td class="py-2 text-gray-700 text-xs font-medium">${l.sec}</td>
-      <td class="py-2 text-right font-mono text-xs" style="color:#44823C">${fmtBRL(l.valorServicos)}</td>
-      <td class="py-2 text-right font-mono text-xs text-gray-500">${fmtBRL(l.totalPedidos)}</td>
-      <td class="py-2 text-right text-xs">
+      <td class="py-2 text-right font-mono text-xs whitespace-nowrap" style="color:#44823C">${fmtBRL(l.valorServicos)}</td>
+      <td class="py-2 text-right font-mono text-xs whitespace-nowrap text-gray-500">${fmtBRL(l.totalPedidos)}</td>
+      <td class="py-2 text-right text-xs whitespace-nowrap">
         <div class="flex items-center justify-end gap-1">
           <div class="h-2 rounded-full" style="width:${barW}px;background:${cor};opacity:.8"></div>
           <span class="font-bold" style="color:${cor}">${l.pct.toFixed(1)}%</span>
