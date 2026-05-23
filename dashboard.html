@@ -150,18 +150,15 @@
       </div>
     </div>
     <div>
-      <label class="text-xs text-gray-500 font-medium block mb-1">Canal</label>
-      <select id="filter-channel" class="text-sm border border-gray-200 rounded-lg px-2 py-1.5">
+      <label class="text-xs text-gray-500 font-medium block mb-1">Vendedor</label>
+      <select id="filter-vendedor" class="text-sm border border-gray-200 rounded-lg px-2 py-1.5">
         <option value="">Todos</option>
       </select>
     </div>
     <div>
-      <label class="text-xs text-gray-500 font-medium block mb-1">Status</label>
-      <select id="filter-status" class="text-sm border border-gray-200 rounded-lg px-2 py-1.5">
-        <option value="">Todos</option>
-        <option value="PAGO">PAGO</option>
-        <option value="FATURADO_TOTAL">FATURADO_TOTAL</option>
-        <option value="FATURADO_PARCIAL">FATURADO_PARCIAL</option>
+      <label class="text-xs text-gray-500 font-medium block mb-1">Seção</label>
+      <select id="filter-secao" class="text-sm border border-gray-200 rounded-lg px-2 py-1.5">
+        <option value="">Todas</option>
       </select>
     </div>
     <button onclick="applyFilters()" class="self-end text-sm btn-primary px-4 py-1.5 rounded-lg font-semibold">Filtrar</button>
@@ -227,7 +224,7 @@
     </div>
   </div>
 
-  <!-- ── TOP ITENS ── -->
+  <!-- ── TOP ITENS + PENETRAÇÃO ── -->
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
     <div class="card">
       <h3 class="card-title">Top 10 Itens de Serviço</h3>
@@ -241,6 +238,28 @@
             </tr>
           </thead>
           <tbody id="table-top-itens"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Penetração de Serviços no Pedido por Seção -->
+    <div class="card">
+      <div class="flex items-start justify-between mb-1">
+        <h3 class="card-title mb-0">Penetração de Serviços no Pedido</h3>
+        <span id="pct-geral-badge" class="badge text-xs font-bold px-2 py-1 rounded-full" style="background:#e6f2e1;color:#44823C"></span>
+      </div>
+      <p class="text-xs text-gray-400 mb-3">% do valor de serviços sobre o total do pedido (col E), por seção</p>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="text-xs border-b" style="color:#9EA5B6">
+              <th class="text-left pb-2">Seção</th>
+              <th class="text-right pb-2">Serviços (R$)</th>
+              <th class="text-right pb-2">Total Pedido (R$)</th>
+              <th class="text-right pb-2">Penetração</th>
+            </tr>
+          </thead>
+          <tbody id="table-penetracao"></tbody>
         </table>
       </div>
     </div>
@@ -414,14 +433,15 @@ function getField(row, ...keys) {
   return found ? found[1] : '';
 }
 
-function getValorItem(row) { return toNum(getField(row, 'Valor total do Item', 'Valor Total do Item', 'valor total do item')); }
-function getQtd(row)       { return toNum(getField(row, 'Quantidade', 'quantidade', 'Qtd')); }
-function getPedido(row)    { return getField(row, 'Número do pedido', 'Numero do pedido', 'número do pedido') || Math.random(); }
-function getLDAP(row)      { return getField(row, 'LDAP', 'ldap', 'Vendedor'); }
-function getDesc(row)      { return getField(row, 'Descrição', 'Descricao', 'descricao', 'Descrição'); }
-function getCanal(row)     { return getField(row, 'Loja/Canal', 'Canal', 'canal'); }
-function getStatus(row)    { return getField(row, 'Status do Pedido de Venda', 'Status do Pedido', 'status'); }
-function getData(row)      { return getField(row, 'Data de Criação', 'Data de Criacao', 'Data'); }
+function getValorItem(row)  { return toNum(getField(row, 'Valor total do Item', 'Valor Total do Item', 'valor total do item')); }
+function getValorTotal(row) { return toNum(getField(row, 'Valor Total', 'Valor total', 'valor total')); } // col E — total do pedido
+function getQtd(row)        { return toNum(getField(row, 'Quantidade', 'quantidade', 'Qtd')); }
+function getPedido(row)     { return getField(row, 'Número do pedido', 'Numero do pedido', 'número do pedido') || Math.random(); }
+function getLDAP(row)       { return getField(row, 'LDAP', 'ldap', 'Vendedor'); }
+function getDesc(row)       { return getField(row, 'Descrição', 'Descricao', 'descricao', 'Descrição'); }
+function getCanal(row)      { return getField(row, 'Loja/Canal', 'Canal', 'canal'); }
+function getStatus(row)     { return getField(row, 'Status do Pedido de Venda', 'Status do Pedido', 'status'); }
+function getData(row)       { return getField(row, 'Data de Criação', 'Data de Criacao', 'Data'); }
 
 // ───────────────────────────────────────────────
 // DEMO DATA — espelha a estrutura real do Leroy Merlin
@@ -475,8 +495,8 @@ function loadDemoData() {
       'Data de Criação':          d.toISOString().slice(0, 10),
       'Status do Pedido de Venda': statuses[Math.floor(Math.random() * statuses.length)],
       'Loja/Canal':               channels[Math.floor(Math.random() * channels.length)],
-      'Número do pedido':         'PED' + (100000 + i),
-      'Valor Total':              (qty * price).toFixed(2),
+      'Número do pedido':         'PED' + (100000 + Math.floor(i / 3)), // ~3 itens por pedido
+      'Valor Total':              ((qty * price) * (1 + Math.random() * 3)).toFixed(2), // pedido maior que o item
       'Nome do Cliente':          'Cliente Demo',
       'CPF/CNPJ/Passaporte':      '000.000.000-00',
       'Justificativa':            '',
@@ -503,34 +523,44 @@ function loadDemoData() {
 // FILTERS
 // ───────────────────────────────────────────────
 function populateFilters() {
-  const channels = [...new Set(rawData.map(r => getCanal(r)).filter(Boolean))];
-  const sel = document.getElementById('filter-channel');
-  sel.innerHTML = '<option value="">Todos</option>';
-  channels.forEach(c => { const o = document.createElement('option'); o.value = c; o.textContent = c; sel.appendChild(o); });
+  // Vendedor
+  const vendedores = [...new Set(rawData.map(r => getLDAP(r)).filter(Boolean))].sort();
+  const selV = document.getElementById('filter-vendedor');
+  selV.innerHTML = '<option value="">Todos</option>';
+  vendedores.forEach(v => {
+    const nome = v.split(' - ').slice(1).join(' - ') || v;
+    const o = document.createElement('option'); o.value = v; o.textContent = nome; selV.appendChild(o);
+  });
+
+  // Seção
+  const secoes = [...new Set(rawData.map(r => getSecao(r)).filter(Boolean))].sort();
+  const selS = document.getElementById('filter-secao');
+  selS.innerHTML = '<option value="">Todas</option>';
+  secoes.forEach(s => { const o = document.createElement('option'); o.value = s; o.textContent = s; selS.appendChild(o); });
 }
 
 function applyFilters() {
-  const start = document.getElementById('filter-start').value;
-  const end = document.getElementById('filter-end').value;
-  const channel = document.getElementById('filter-channel').value;
-  const status = document.getElementById('filter-status').value;
+  const start   = document.getElementById('filter-start').value;
+  const end     = document.getElementById('filter-end').value;
+  const vendedor = document.getElementById('filter-vendedor').value;
+  const secao   = document.getElementById('filter-secao').value;
 
   filteredData = rawData.filter(r => {
     const d = getData(r);
-    if (start && d < start) return false;
-    if (end && d > end) return false;
-    if (channel && getCanal(r) !== channel) return false;
-    if (status && getStatus(r) !== status) return false;
+    if (start   && d < start) return false;
+    if (end     && d > end)   return false;
+    if (vendedor && getLDAP(r) !== vendedor) return false;
+    if (secao   && getSecao(r) !== secao)   return false;
     return true;
   });
   renderAll();
 }
 
 function clearFilters() {
-  document.getElementById('filter-start').value = '';
-  document.getElementById('filter-end').value = '';
-  document.getElementById('filter-channel').value = '';
-  document.getElementById('filter-status').value = '';
+  document.getElementById('filter-start').value    = '';
+  document.getElementById('filter-end').value      = '';
+  document.getElementById('filter-vendedor').value = '';
+  document.getElementById('filter-secao').value    = '';
   filteredData = [...rawData];
   renderAll();
 }
@@ -554,11 +584,12 @@ function renderAll() {
   const visits   = filteredData.filter(isVisit);
 
   renderKpiMaster(services, visits);
-  renderVendedorChart(services);     // gráfico R$ por vendedor (só serviços)
-  renderSecaoValorChart(services);   // gráfico valor por seção (só serviços)
+  renderVendedorChart(services);
+  renderSecaoValorChart(services);
   renderVendedoresTable(services);
-  renderSecoesTable(services);       // tabela seções (só serviços)
+  renderSecoesTable(services);
   renderTopItens(services);
+  renderPenetracao(services, filteredData);
 }
 
 // ───────────────────────────────────────────────
@@ -717,6 +748,62 @@ function renderTopItens(services) {
       <td class="py-2 text-right font-mono text-xs" style="color:#44823C">${fmtBRL(r.val)}</td>
     </tr>
   `).join('') || '<tr><td colspan="3" class="text-center py-8 text-gray-400 text-sm">Nenhum item encontrado</td></tr>';
+}
+
+// ───────────────────────────────────────────────
+// PENETRAÇÃO DE SERVIÇOS NO PEDIDO
+// Lógica: para cada pedido único que possui ≥1 item de serviço,
+// soma o Valor Total do pedido (col E) e o Valor do item de serviço.
+// % = ΣValorItemServiço / ΣValorTotalPedido × 100
+// ───────────────────────────────────────────────
+function renderPenetracao(services, allData) {
+  // Monta mapa pedido → Valor Total (col E) — usando todos os dados
+  const valorTotalPorPedido = {};
+  allData.forEach(r => {
+    const ped = getPedido(r);
+    const vt  = getValorTotal(r);
+    if (ped && vt > 0) valorTotalPorPedido[ped] = vt; // col E é o mesmo para todos os itens do pedido
+  });
+
+  // Agrupa serviços por seção
+  const bySecao = groupByFn(services, r => getSecao(r));
+
+  // Para cada seção: soma valor dos itens de serviço e o valor total dos pedidos envolvidos
+  const linhas = Object.entries(bySecao).map(([sec, rows]) => {
+    const valorServicos = rows.reduce((s, r) => s + getValorItem(r), 0);
+    // Pedidos únicos desta seção
+    const pedidosDaSecao = [...new Set(rows.map(r => getPedido(r)))];
+    const totalPedidos   = pedidosDaSecao.reduce((s, ped) => s + (valorTotalPorPedido[ped] || 0), 0);
+    const pct            = totalPedidos > 0 ? (valorServicos / totalPedidos * 100) : 0;
+    return { sec, valorServicos, totalPedidos, pct };
+  }).sort((a, b) => b.pct - a.pct);
+
+  // Geral (todas as seções combinadas)
+  const totalServGeral  = linhas.reduce((s, l) => s + l.valorServicos, 0);
+  const totalPedGeral   = [...new Set(services.map(r => getPedido(r)))]
+                            .reduce((s, ped) => s + (valorTotalPorPedido[ped] || 0), 0);
+  const pctGeral        = totalPedGeral > 0 ? (totalServGeral / totalPedGeral * 100).toFixed(1) : '0.0';
+
+  // Atualiza badge geral
+  const badge = document.getElementById('pct-geral-badge');
+  if (badge) badge.textContent = `Geral: ${pctGeral}%`;
+
+  document.getElementById('table-penetracao').innerHTML = linhas.map(l => {
+    const barW = Math.min(Math.round(l.pct / 100 * 60), 60);
+    const cor  = l.pct >= 30 ? '#44823C' : l.pct >= 15 ? '#B0B676' : '#9EA5B6';
+    return `
+    <tr class="table-row border-b border-gray-50">
+      <td class="py-2 text-gray-700 text-xs font-medium">${l.sec}</td>
+      <td class="py-2 text-right font-mono text-xs" style="color:#44823C">${fmtBRL(l.valorServicos)}</td>
+      <td class="py-2 text-right font-mono text-xs text-gray-500">${fmtBRL(l.totalPedidos)}</td>
+      <td class="py-2 text-right text-xs">
+        <div class="flex items-center justify-end gap-1">
+          <div class="h-2 rounded-full" style="width:${barW}px;background:${cor};opacity:.8"></div>
+          <span class="font-bold" style="color:${cor}">${l.pct.toFixed(1)}%</span>
+        </div>
+      </td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="4" class="text-center py-8 text-gray-400 text-sm">Sem dados</td></tr>';
 }
 
 // ───────────────────────────────────────────────
