@@ -946,17 +946,20 @@ function renderSecaoValorChart(services) {
         clip: false,
       }
     },
-    layout: { padding: { top: 28 } },
+    layout: { padding: { top: 28, bottom: 8 } },
     scales: {
       y: { display: false, grid: { display: false }, border: { display: false } },
       x: {
         grid: { display: false }, border: { display: false },
         ticks: {
-          font: { size: 10 },
-          maxRotation: 0,
+          font: { size: 9 },
+          maxRotation: 45,
           minRotation: 0,
+          autoSkip: false,
           callback: function(val) {
-            return wrapLabel(this.getLabelForValue(val), 10);
+            const lbl = this.getLabelForValue(val);
+            // Trunca apenas se muito longo, sem quebrar em linhas (rótulo rotacionado)
+            return lbl.length > 14 ? lbl.slice(0, 13) + '…' : lbl;
           }
         }
       }
