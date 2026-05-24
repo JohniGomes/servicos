@@ -79,6 +79,24 @@
       .cell-name { max-width: 220px; font-size: 0.75rem; }
     }
 
+    /* ── TABS ── */
+    .tab-bar { background:white; border-radius:12px; box-shadow:0 1px 4px rgba(0,0,0,.06); display:flex; gap:4px; padding:4px; margin-bottom:20px; }
+    .tab-btn { flex:1; padding:8px 12px; border-radius:8px; font-size:.82rem; font-weight:600; cursor:pointer; border:none; background:transparent; color:#6b7280; transition:all .2s; }
+    .tab-btn.active { background:#44823C; color:white; }
+    .tab-btn:not(.active):hover { background:#f0f2ee; color:#253B35; }
+    .tab-pane { display:none; }
+    .tab-pane.active { display:block; }
+
+    /* ── INSIGHTS ── */
+    .insight-card { border-left:3px solid #BCE05E; background:#f8fdf4; border-radius:10px; padding:12px 14px; font-size:.82rem; color:#253B35; }
+    .insight-card b { color:#44823C; }
+    #ai-output { white-space:pre-wrap; font-size:.82rem; color:#253B35; line-height:1.6; }
+    .ai-loader { display:flex; align-items:center; gap:8px; color:#6b7280; font-size:.82rem; }
+    .ai-dot { width:8px; height:8px; border-radius:50%; background:#44823C; animation:aiPulse 1.2s ease-in-out infinite; }
+    .ai-dot:nth-child(2) { animation-delay:.2s; }
+    .ai-dot:nth-child(3) { animation-delay:.4s; }
+    @keyframes aiPulse { 0%,100%{opacity:.3;transform:scale(.8)} 50%{opacity:1;transform:scale(1)} }
+
     /* header gradient */
     .lm-header { background: linear-gradient(135deg, #253B35 0%, #44823C 100%); }
 
@@ -210,7 +228,7 @@
 <!-- ── MAIN ── -->
 <main class="max-w-screen-xl mx-auto px-3 sm:px-6 py-4 sm:py-6" id="main-content">
 
-  <!-- FILTER BAR -->
+  <!-- FILTER BAR (compartilhado entre abas) -->
   <div class="filter-bar">
     <!-- mobile: 4 filtros em grid 2 colunas + botões -->
     <div class="sm:hidden">
@@ -279,102 +297,156 @@
     </div>
   </div>
 
-  <!-- ── KPIs MASTER ── -->
-  <section class="mb-8">
-    <h2 class="section-title">KPIs Master</h2>
-    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4" id="kpi-master"></div>
-  </section>
-
-  <!-- ── CHARTS ROW 1 ── -->
-  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-    <!-- Serviços por Vendedor (R$) -->
-    <div class="card">
-      <h3 class="card-title">Vendas de Serviços por Vendedor (R$)</h3>
-      <div class="chart-container"><canvas id="chart-vendedor-val"></canvas></div>
-    </div>
-    <!-- Serviços por Seção — Valor (filtrado por isService) -->
-    <div class="card">
-      <h3 class="card-title">Serviços por Seção — Valor (R$)</h3>
-      <div class="chart-container"><canvas id="chart-secao-valor"></canvas></div>
-    </div>
+  <!-- ── TABS ── -->
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="switchTab('resumo', this)">📊 Resumo</button>
+    <button class="tab-btn" onclick="switchTab('analises', this)">🔍 Análises</button>
+    <button class="tab-btn" onclick="switchTab('insights', this)">🤖 Insights IA</button>
   </div>
 
-  <!-- ── TABLES ROW ── -->
-  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-    <!-- Vendedores: Qtd | R$ Total | % do Total -->
-    <div class="card">
-      <h3 class="card-title">Vendedores com Vendas de Serviços</h3>
-      <div class="overflow-x-auto">
-        <table class="w-full text-sm">
-          <thead>
-            <tr class="text-xs border-b" style="color:#9EA5B6">
-              <th class="text-left pb-2">#</th>
-              <th class="text-left pb-2">Vendedor</th>
-              <th class="text-right pb-2">Qtd</th>
-              <th class="text-right pb-2">R$ Total</th>
-              <th class="text-right pb-2">% do Total</th>
-            </tr>
-          </thead>
-          <tbody id="table-vendedores"></tbody>
-        </table>
+  <!-- ══════════ ABA 1: RESUMO ══════════ -->
+  <div id="tab-resumo" class="tab-pane active">
+    <section class="mb-6">
+      <h2 class="section-title">KPIs Master</h2>
+      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4" id="kpi-master"></div>
+    </section>
+
+    <!-- Gráficos resumo -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+      <div class="card">
+        <h3 class="card-title">Vendas de Serviços por Vendedor (R$)</h3>
+        <div class="chart-container"><canvas id="chart-vendedor-val"></canvas></div>
       </div>
-    </div>
-    <!-- Seções detalhado -->
-    <div class="card">
-      <h3 class="card-title">Serviços por Seção — Detalhado</h3>
-      <div class="overflow-x-auto">
-        <table class="w-full text-sm">
-          <thead>
-            <tr class="text-xs border-b" style="color:#9EA5B6">
-              <th class="text-left pb-2">Seção</th>
-              <th class="text-right pb-2">Qtd</th>
-              <th class="text-right pb-2">R$ Total</th>
-              <th class="text-right pb-2">% do Total</th>
-            </tr>
-          </thead>
-          <tbody id="table-secoes"></tbody>
-        </table>
+      <div class="card">
+        <h3 class="card-title">Serviços por Seção — Valor (R$)</h3>
+        <div class="chart-container"><canvas id="chart-secao-valor"></canvas></div>
       </div>
     </div>
   </div>
 
-  <!-- ── TOP ITENS + PENETRAÇÃO ── -->
-  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-    <div class="card">
-      <h3 class="card-title">Top 10 Itens de Serviço</h3>
-      <div class="overflow-x-auto">
-        <table class="w-full text-sm">
-          <thead>
-            <tr class="text-xs border-b" style="color:#9EA5B6">
-              <th class="text-left pb-2">Item</th>
-              <th class="text-right pb-2">Qtd</th>
-              <th class="text-right pb-2">R$ Total</th>
-            </tr>
-          </thead>
-          <tbody id="table-top-itens"></tbody>
-        </table>
+  <!-- ══════════ ABA 2: ANÁLISES ══════════ -->
+  <div id="tab-analises" class="tab-pane">
+    <!-- Vendedores + Seções -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+      <div class="card">
+        <h3 class="card-title">Vendedores com Vendas de Serviços</h3>
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="text-xs border-b" style="color:#9EA5B6">
+                <th class="text-left pb-2">#</th>
+                <th class="text-left pb-2">Vendedor</th>
+                <th class="text-right pb-2">Linhas</th>
+                <th class="text-right pb-2">R$ Total</th>
+                <th class="text-right pb-2">% do Total</th>
+              </tr>
+            </thead>
+            <tbody id="table-vendedores"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card">
+        <h3 class="card-title">Serviços por Seção — Detalhado</h3>
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="text-xs border-b" style="color:#9EA5B6">
+                <th class="text-left pb-2">Seção</th>
+                <th class="text-right pb-2">Linhas</th>
+                <th class="text-right pb-2">R$ Total</th>
+                <th class="text-right pb-2">% do Total</th>
+              </tr>
+            </thead>
+            <tbody id="table-secoes"></tbody>
+          </table>
+        </div>
       </div>
     </div>
 
-    <!-- Penetração de Serviços no Pedido por Seção -->
-    <div class="card">
-      <div class="flex items-start justify-between mb-1">
-        <h3 class="card-title mb-0">Penetração de Serviços no Pedido</h3>
-        <span id="pct-geral-badge" class="badge text-xs font-bold px-2 py-1 rounded-full" style="background:#e6f2e1;color:#44823C"></span>
+    <!-- Top Itens + Penetração -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+      <div class="card">
+        <h3 class="card-title">Top 10 Itens de Serviço</h3>
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="text-xs border-b" style="color:#9EA5B6">
+                <th class="text-left pb-2">Item</th>
+                <th class="text-right pb-2">Linhas</th>
+                <th class="text-right pb-2">R$ Total</th>
+              </tr>
+            </thead>
+            <tbody id="table-top-itens"></tbody>
+          </table>
+        </div>
       </div>
-      <p class="text-xs text-gray-400 mb-3">% do valor de serviços sobre o total do pedido</p>
-      <div class="overflow-x-auto">
-        <table class="w-full text-sm">
-          <thead>
-            <tr class="text-xs border-b" style="color:#9EA5B6">
-              <th class="text-left pb-2">Seção</th>
-              <th class="text-right pb-2">Serviços (R$)</th>
-              <th class="text-right pb-2">Total Pedido (R$)</th>
-              <th class="text-right pb-2">Penetração</th>
-            </tr>
-          </thead>
-          <tbody id="table-penetracao"></tbody>
-        </table>
+      <div class="card">
+        <div class="flex items-start justify-between mb-1">
+          <h3 class="card-title mb-0">Penetração de Serviços no Pedido</h3>
+          <span id="pct-geral-badge" class="badge text-xs font-bold px-2 py-1 rounded-full" style="background:#e6f2e1;color:#44823C"></span>
+        </div>
+        <p class="text-xs text-gray-400 mb-3">% do valor de serviços sobre o total do pedido</p>
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="text-xs border-b" style="color:#9EA5B6">
+                <th class="text-left pb-2">Seção</th>
+                <th class="text-right pb-2">Serviços (R$)</th>
+                <th class="text-right pb-2">Total Pedido (R$)</th>
+                <th class="text-right pb-2">Penetração</th>
+              </tr>
+            </thead>
+            <tbody id="table-penetracao"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ ABA 3: INSIGHTS IA ══════════ -->
+  <div id="tab-insights" class="tab-pane">
+    <!-- Config Gemini -->
+    <div class="card mb-4">
+      <div class="flex flex-wrap items-end gap-3">
+        <div class="flex-1 min-w-[240px]">
+          <label class="block text-xs font-semibold text-gray-600 mb-1">
+            🔑 Gemini API Key
+            <a href="https://aistudio.google.com/app/apikey" target="_blank" class="font-normal text-blue-500 hover:underline ml-1">(obter chave grátis)</a>
+          </label>
+          <input id="gemini-key" type="password" placeholder="AIza..."
+            class="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 font-mono focus:outline-none focus:ring-2 focus:ring-green-300" />
+        </div>
+        <button onclick="runGemini()" class="btn-primary px-4 py-2 rounded-lg text-sm font-semibold whitespace-nowrap">
+          ✨ Gerar Insights
+        </button>
+        <button onclick="runInsightsLocais()" class="btn-neutral px-4 py-2 rounded-lg text-sm whitespace-nowrap">
+          📋 Insights Automáticos
+        </button>
+      </div>
+      <p class="text-xs text-gray-400 mt-2">A chave fica salva localmente no navegador. Sem chave, use "Insights Automáticos".</p>
+    </div>
+
+    <!-- Output -->
+    <div class="card" id="insights-output-card">
+      <div id="insights-placeholder" class="text-center py-12 text-gray-400">
+        <div class="text-5xl mb-3">🤖</div>
+        <p class="text-sm">Clique em <b>Gerar Insights</b> (com chave Gemini) ou <b>Insights Automáticos</b> para analisar os dados.</p>
+      </div>
+      <div id="insights-loading" class="hidden py-8 flex flex-col items-center gap-3">
+        <div class="ai-loader">
+          <div class="ai-dot"></div><div class="ai-dot"></div><div class="ai-dot"></div>
+        </div>
+        <p class="text-xs text-gray-400">Analisando dados com Gemini...</p>
+      </div>
+      <div id="insights-content" class="hidden">
+        <div class="flex items-center gap-2 mb-4">
+          <span id="insights-source-badge" class="badge" style="background:#e6f2e1;color:#44823C">IA</span>
+          <h3 class="font-semibold text-sm" style="color:#253B35">Análise dos Dados de Serviços</h3>
+        </div>
+        <!-- Cards de insight automático -->
+        <div id="insight-cards" class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4"></div>
+        <!-- Texto Gemini -->
+        <div id="ai-output" class="hidden p-4 rounded-xl" style="background:#f8fdf4;border:1px solid #BCE05E"></div>
       </div>
     </div>
   </div>
@@ -383,8 +455,7 @@
   <div id="no-data-msg" class="hidden text-center py-16">
     <div class="text-6xl mb-4">📊</div>
     <h3 class="text-xl font-semibold mb-2" style="color:#253B35">Nenhum dado carregado</h3>
-    <p class="text-gray-400 mb-4">Configure o ID da planilha Google Sheets ou carregue dados demo.</p>
-    <button onclick="loadDemoData()" class="btn-primary px-6 py-2 rounded-lg font-semibold">Carregar Dados Demo</button>
+    <p class="text-gray-400 mb-4">Aguardando conexão com a planilha...</p>
   </div>
 
 </main>
@@ -729,17 +800,16 @@ function renderAll() {
 // KPI MASTER
 // ───────────────────────────────────────────────
 function renderKpiMaster(services, visits) {
-  const totalQtd = services.reduce((s, r) => s + getQtd(r), 0);
-  const totalVal = services.reduce((s, r) => s + getValorItem(r), 0);
-  const visitQtd = visits.reduce((s, r) => s + getQtd(r), 0);
-  const visitVal = visits.reduce((s, r) => s + getValorItem(r), 0);
+  const totalLinhas = services.length;           // contagem de linhas de serviço
+  const totalVal    = services.reduce((s, r) => s + getValorItem(r), 0);
+  const visitLinhas = visits.length;             // contagem de linhas de visita
   const sellers  = new Set(services.filter(r => getLDAP(r) && !getLDAP(r).toUpperCase().includes('ECOMMERCE')).map(r => getLDAP(r)));
   const secoes   = new Set(services.map(r => getSecao(r)).filter(Boolean));
 
   // Ordem: Serviços Vendidos | Visitas Técnicas | Receita de Serviços | Vendedores | Seções com Serviço
   const cards = [
-    { label: 'Serviços Vendidos',   value: fmtQtd(totalQtd),  sub: '',                      color: 'green',  icon: '🛠' },
-    { label: 'Visitas Técnicas',    value: fmtQtd(visitQtd),  sub: '',                       color: 'purple', icon: '🔍' },
+    { label: 'Serviços Vendidos',   value: fmtQtd(totalLinhas), sub: '',                      color: 'green',  icon: '🛠' },
+    { label: 'Visitas Técnicas',    value: fmtQtd(visitLinhas), sub: '',                       color: 'purple', icon: '🔍' },
     { label: 'Receita de Serviços', value: fmtBRL(totalVal),  sub: 'valor total',           color: 'blue',   icon: '💰' },
     { label: 'Vendedores',           value: sellers.size,       sub: 'com venda de serviço', color: 'teal',   icon: '👤' },
     { label: 'Seções com Serviço',  value: secoes.size,        sub: 'seções distintas',     color: 'rose',   icon: '📂' },
@@ -879,7 +949,7 @@ function renderVendedoresTable(services) {
   const rows = Object.entries(by)
     .map(([ldap, rows]) => ({
       name: ldap.split(' - ').slice(1).join(' - ') || ldap,
-      qtd:  rows.reduce((s, r) => s + getQtd(r), 0),
+      qtd:  rows.length,
       val:  rows.reduce((s, r) => s + getValorItem(r), 0),
     }))
     .sort((a, b) => b.val - a.val);
@@ -909,7 +979,7 @@ function renderSecoesTable(services) {
   const rows = Object.entries(by)
     .map(([sec, rows]) => ({
       sec,
-      qtd: rows.reduce((s, r) => s + getQtd(r), 0),
+      qtd: rows.length,
       val: rows.reduce((s, r) => s + getValorItem(r), 0),
     }))
     .sort((a, b) => b.val - a.val);
@@ -934,7 +1004,7 @@ function renderTopItens(services) {
   const rows = Object.entries(by)
     .map(([desc, rows]) => ({
       desc,
-      qtd: rows.reduce((s, r) => s + getQtd(r), 0),
+      qtd: rows.length,
       val: rows.reduce((s, r) => s + getValorItem(r), 0),
     }))
     .sort((a, b) => b.val - a.val)
@@ -1034,7 +1104,7 @@ function fmtQtd(v) {
 
 function fmtK(v) {
   if (v >= 1000) return (v / 1000).toFixed(1) + 'k';
-  return v;
+  return Number(v).toFixed(2).replace('.', ',');
 }
 
 function setLoading(on) {
@@ -1060,6 +1130,136 @@ function showToast(msg, color = 'green') {
 function showNoData() {
   document.getElementById('no-data-msg').classList.remove('hidden');
   document.getElementById('kpi-master').innerHTML = '';
+}
+
+// ───────────────────────────────────────────────
+// TABS
+// ───────────────────────────────────────────────
+function switchTab(id, btn) {
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ───────────────────────────────────────────────
+// INSIGHTS AUTOMÁTICOS
+// ───────────────────────────────────────────────
+function runInsightsLocais() {
+  const services = filteredData.filter(isService);
+  if (!services.length) { showToast('Sem dados de serviço para analisar', 'amber'); return; }
+
+  const totalVal = services.reduce((s, r) => s + getValorItem(r), 0);
+  const visits   = filteredData.filter(isVisit);
+
+  // Top vendedor
+  const byV = groupByFn(services, r => getLDAP(r));
+  const topV = Object.entries(byV).map(([k,v]) => ({ name: k.split(' - ').slice(1).join(' ') || k, val: v.reduce((s,r) => s+getValorItem(r),0) })).sort((a,b)=>b.val-a.val)[0];
+
+  // Top seção
+  const byS = groupByFn(services, r => getSecao(r));
+  const topS = Object.entries(byS).map(([k,v]) => ({ name: k, val: v.reduce((s,r) => s+getValorItem(r),0), qtd: v.length })).sort((a,b)=>b.val-a.val)[0];
+
+  // Ticket médio
+  const ticket = totalVal / services.length;
+
+  // Penetração geral
+  const valorTotalPorPedido = {};
+  filteredData.forEach(r => { const p=getPedido(r),v=getValorTotal(r); if(p&&v>0) valorTotalPorPedido[p]=v; });
+  const pedServicos = [...new Set(services.map(r => getPedido(r)))];
+  const totalPed = pedServicos.reduce((s,p) => s+(valorTotalPorPedido[p]||0),0);
+  const pctPen = totalPed > 0 ? (totalVal/totalPed*100).toFixed(1) : '—';
+
+  // Vendedores sem serviço (do rawData)
+  const todosVend = new Set(rawData.map(r=>getLDAP(r)).filter(Boolean));
+  const vendComServ = new Set(services.map(r=>getLDAP(r)).filter(Boolean));
+  const semServico = [...todosVend].filter(v=>!vendComServ.has(v)).length;
+
+  const cards = [
+    { icon:'🏆', titulo:'Top Vendedor', texto:`<b>${topV?.name||'—'}</b> lidera com <b>${fmtBRL(topV?.val||0)}</b> em serviços` },
+    { icon:'📦', titulo:'Seção Destaque', texto:`<b>${topS?.name||'—'}</b> com <b>${fmtBRL(topS?.val||0)}</b> em ${topS?.qtd||0} linhas` },
+    { icon:'💵', titulo:'Ticket Médio por Linha', texto:`Média de <b>${fmtBRL(ticket)}</b> por linha de serviço` },
+    { icon:'🎯', titulo:'Penetração Geral', texto:`Serviços representam <b>${pctPen}%</b> do valor total dos pedidos` },
+    { icon:'🔍', titulo:'Visitas Técnicas', texto:`<b>${visits.length}</b> linhas de visita técnica registradas` },
+    { icon:'⚠️', titulo:'Vendedores sem Serviço', texto:`<b>${semServico}</b> vendedor(es) sem nenhum serviço registrado` },
+  ];
+
+  document.getElementById('insights-placeholder').classList.add('hidden');
+  document.getElementById('insights-loading').classList.add('hidden');
+  document.getElementById('insights-content').classList.remove('hidden');
+  document.getElementById('ai-output').classList.add('hidden');
+  document.getElementById('insights-source-badge').textContent = 'Automático';
+  document.getElementById('insight-cards').innerHTML = cards.map(c => `
+    <div class="insight-card">
+      <div class="text-base mb-1">${c.icon} <span class="font-bold text-xs uppercase tracking-wide" style="color:#253B35">${c.titulo}</span></div>
+      <div>${c.texto}</div>
+    </div>
+  `).join('');
+}
+
+// ───────────────────────────────────────────────
+// GEMINI API
+// ───────────────────────────────────────────────
+async function runGemini() {
+  const key = document.getElementById('gemini-key').value.trim();
+  if (!key) { showToast('Insira sua Gemini API Key primeiro', 'amber'); return; }
+  localStorage.setItem('gemini_key', key);
+
+  const services = filteredData.filter(isService);
+  if (!services.length) { showToast('Sem dados de serviço para analisar', 'amber'); return; }
+
+  // Monta resumo compacto para enviar ao Gemini
+  const totalVal = services.reduce((s,r) => s+getValorItem(r), 0);
+  const byV = groupByFn(services, r => getLDAP(r));
+  const byS = groupByFn(services, r => getSecao(r));
+  const topVend = Object.entries(byV).map(([k,v])=>({ n: k.split(' - ').slice(1).join(' ')||k, v: v.reduce((s,r)=>s+getValorItem(r),0) })).sort((a,b)=>b.v-a.v).slice(0,5);
+  const topSec  = Object.entries(byS).map(([k,v])=>({ n:k, v: v.reduce((s,r)=>s+getValorItem(r),0), q:v.length })).sort((a,b)=>b.v-a.v);
+
+  const prompt = `Você é um analista de dados da Leroy Merlin Brasil. Analise os dados abaixo de serviços vendidos e gere insights objetivos e acionáveis em português. Seja direto, use bullet points e destaque oportunidades e alertas.
+
+DADOS:
+- Total de linhas de serviço: ${services.length}
+- Receita total de serviços: R$ ${totalVal.toFixed(2)}
+- Ticket médio por linha: R$ ${(totalVal/services.length).toFixed(2)}
+- Visitas técnicas: ${filteredData.filter(isVisit).length} linhas
+
+TOP VENDEDORES:
+${topVend.map((v,i)=>`${i+1}. ${v.n}: R$ ${v.v.toFixed(2)}`).join('\n')}
+
+SERVIÇOS POR SEÇÃO:
+${topSec.map(s=>`- ${s.n}: ${s.q} linhas | R$ ${s.v.toFixed(2)}`).join('\n')}
+
+Gere: 1) 3 pontos positivos, 2) 3 alertas ou oportunidades, 3) 2 recomendações práticas.`;
+
+  document.getElementById('insights-placeholder').classList.add('hidden');
+  document.getElementById('insights-content').classList.add('hidden');
+  document.getElementById('insights-loading').classList.remove('hidden');
+
+  try {
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error?.message || 'Erro na API');
+    const text = json.candidates?.[0]?.content?.parts?.[0]?.text || 'Sem resposta';
+
+    // Também mostra os cards automáticos
+    runInsightsLocais();
+    document.getElementById('insights-source-badge').textContent = '🤖 Gemini IA';
+    const aiOut = document.getElementById('ai-output');
+    aiOut.classList.remove('hidden');
+    aiOut.innerHTML = text.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>').replace(/\*(.*?)\*/g, '<i>$1</i>').replace(/\n/g, '<br>');
+
+  } catch(e) {
+    document.getElementById('insights-loading').classList.add('hidden');
+    document.getElementById('insights-content').classList.remove('hidden');
+    showToast('Erro Gemini: ' + e.message, 'red');
+  } finally {
+    document.getElementById('insights-loading').classList.add('hidden');
+    document.getElementById('insights-content').classList.remove('hidden');
+  }
 }
 
 // ───────────────────────────────────────────────
@@ -1099,6 +1299,9 @@ function togglePass() {
 function showApp() {
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('app').style.display = 'block';
+  // Restaura chave Gemini salva
+  const savedKey = localStorage.getItem('gemini_key');
+  if (savedKey) document.getElementById('gemini-key').value = savedKey;
   loadConfig();
   loadData();
 }
