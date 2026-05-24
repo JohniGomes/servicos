@@ -1188,39 +1188,44 @@ function runInsightsLocais() {
 // ───────────────────────────────────────────────
 // GEMINI API — fallback entre modelos
 // ───────────────────────────────────────────────
+// Modelos em ordem de preferência — tenta todos até um funcionar
 const GEMINI_MODELS = [
-  'gemini-2.0-flash-lite',
-  'gemini-2.0-flash',
-  'gemini-1.5-flash',
-  'gemini-1.5-flash-8b',
+  { model: 'gemini-2.0-flash-lite',    api: 'v1beta' },
+  { model: 'gemini-2.0-flash',         api: 'v1beta' },
+  { model: 'gemini-2.0-flash-lite',    api: 'v1'     },
+  { model: 'gemini-2.0-flash',         api: 'v1'     },
+  { model: 'gemini-1.5-flash',         api: 'v1'     },
+  { model: 'gemini-1.5-flash-8b',      api: 'v1'     },
+  { model: 'gemini-1.0-pro',           api: 'v1'     },
 ];
 
 async function callGemini(key, prompt) {
-  for (const model of GEMINI_MODELS) {
+  let lastErr = '';
+  for (const { model, api } of GEMINI_MODELS) {
     try {
       const res = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`,
+        `https://generativelanguage.googleapis.com/${api}/models/${model}:generateContent?key=${key}`,
         { method:'POST', headers:{'Content-Type':'application/json'},
           body: JSON.stringify({ contents:[{ parts:[{ text: prompt }] }] }) }
       );
       const json = await res.json();
       if (!res.ok) {
-        // Se for quota/rate-limit, tenta próximo modelo; outros erros: lança
-        const msg = json.error?.message || '';
-        if (msg.toLowerCase().includes('quota') || msg.toLowerCase().includes('limit') || res.status === 429) {
-          console.warn(`Modelo ${model} sem cota, tentando próximo...`);
-          continue;
-        }
-        throw new Error(msg || `HTTP ${res.status}`);
+        // Para qualquer erro de API, tenta o próximo modelo
+        lastErr = json.error?.message || `HTTP ${res.status}`;
+        console.warn(`Modelo ${model} (${api}) falhou: ${lastErr}`);
+        continue;
       }
       const text = json.candidates?.[0]?.content?.parts?.[0]?.text;
       if (text) return { text, model };
+      lastErr = 'Resposta vazia do modelo';
+      continue;
     } catch(e) {
-      if (e.message.includes('quota') || e.message.includes('limit')) { continue; }
-      throw e;
+      lastErr = e.message;
+      console.warn(`Modelo ${model} (${api}) erro de rede: ${e.message}`);
+      continue;
     }
   }
-  throw new Error('Todos os modelos Gemini estão sem cota no plano gratuito. Tente novamente em alguns minutos ou use "Insights Automáticos".');
+  throw new Error(lastErr || 'Nenhum modelo disponível. Tente em alguns minutos ou use "Insights Automáticos".');
 }
 
 async function runGemini() {
