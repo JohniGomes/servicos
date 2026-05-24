@@ -305,6 +305,20 @@
 
   <!-- ══════════ ABA 1: RESUMO ══════════ -->
   <div id="tab-resumo" class="tab-pane active">
+
+    <!-- Destaque Receita Total -->
+    <div id="receita-destaque" class="mb-5 rounded-2xl px-6 py-4 flex flex-wrap items-center justify-between gap-3"
+         style="background:linear-gradient(135deg,#253B35 0%,#44823C 100%)">
+      <div>
+        <p class="text-xs font-semibold text-lime-300 uppercase tracking-widest mb-1">Receita Total de Serviços</p>
+        <p class="text-3xl sm:text-4xl font-bold text-white" id="receita-total-destaque">—</p>
+      </div>
+      <div class="text-right">
+        <p class="text-xs text-lime-200 mb-0.5" id="destaque-linhas">—</p>
+        <p class="text-xs text-lime-200" id="destaque-ticket">—</p>
+      </div>
+    </div>
+
     <section class="mb-6">
       <h2 class="section-title">KPIs Master</h2>
       <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4" id="kpi-master"></div>
@@ -313,12 +327,12 @@
     <!-- Gráficos resumo -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
       <div class="card">
-        <h3 class="card-title">Vendas de Serviços por Vendedor (R$)</h3>
-        <div class="chart-container"><canvas id="chart-vendedor-val"></canvas></div>
+        <h3 class="card-title">Top 10 Vendedores por Serviços (R$)</h3>
+        <div id="container-vendedor-val" style="position:relative"><canvas id="chart-vendedor-val"></canvas></div>
       </div>
       <div class="card">
         <h3 class="card-title">Serviços por Seção — Valor (R$)</h3>
-        <div class="chart-container"><canvas id="chart-secao-valor"></canvas></div>
+        <div id="container-secao-valor" style="position:relative"><canvas id="chart-secao-valor"></canvas></div>
       </div>
     </div>
   </div>
@@ -803,6 +817,15 @@ function renderKpiMaster(services, visits) {
     { label: 'Seções com Serviço',  value: secoes.size,        sub: 'seções distintas',     color: 'rose',   icon: '📂' },
   ];
 
+  // Destaque receita total
+  const ticket = totalLinhas > 0 ? totalVal / totalLinhas : 0;
+  const dEl = document.getElementById('receita-total-destaque');
+  const dLin = document.getElementById('destaque-linhas');
+  const dTick = document.getElementById('destaque-ticket');
+  if (dEl) dEl.textContent = fmtBRL(totalVal);
+  if (dLin) dLin.textContent = `${fmtQtd(totalLinhas)} linhas de serviço`;
+  if (dTick) dTick.textContent = `Ticket médio: ${fmtBRL(ticket)}`;
+
   document.getElementById('kpi-master').innerHTML = cards.map(c => `
     <div class="kpi-card bg-white rounded-2xl shadow-sm p-4 border-l-4" style="border-color:var(--${c.color})">
       <div class="flex items-center justify-between mb-2">
@@ -845,6 +868,12 @@ function wrapLabel(str, maxChars) {
 }
 
 // Gráfico: Vendas de Serviços por Vendedor (R$) — barras horizontais
+function setChartHeight(containerId, items, pxPerItem, min, max) {
+  const h = Math.min(Math.max(items * pxPerItem, min), max);
+  const el = document.getElementById(containerId);
+  if (el) el.style.height = h + 'px';
+}
+
 function renderVendedorChart(services) {
   const by = groupByFn(services, r => getLDAP(r));
   const sorted = Object.entries(by)
@@ -854,6 +883,9 @@ function renderVendedorChart(services) {
     }))
     .sort((a, b) => b.val - a.val)
     .slice(0, 10);
+
+  // Altura dinâmica: 44px por vendedor, mínimo 220px, máximo 520px
+  setChartHeight('container-vendedor-val', sorted.length, 44, 220, 520);
 
   mkChart('chart-vendedor-val', 'bar', {
     labels: sorted.map(r => r.name),
@@ -871,7 +903,7 @@ function renderVendedorChart(services) {
         clip: false,
       }
     },
-    layout: { padding: { right: 65 } },
+    layout: { padding: { right: 72 } },
     scales: {
       x: { display: false, grid: { display: false }, border: { display: false } },
       y: {
@@ -879,9 +911,7 @@ function renderVendedorChart(services) {
         ticks: {
           font: { size: 10 },
           callback: function(val) {
-            const lbl = this.getLabelForValue(val);
-            // quebra em linhas de ~16 chars na fronteira de palavra
-            return wrapLabel(lbl, 16);
+            return wrapLabel(this.getLabelForValue(val), 18);
           }
         }
       }
@@ -889,11 +919,18 @@ function renderVendedorChart(services) {
   });
 }
 
-// Gráfico: Serviços por Seção — Valor (R$) — mesmo critério dos KPIs
+// Gráfico: Serviços por Seção — Valor (R$) — todas as seções
 function renderSecaoValorChart(services) {
   const by = groupByFn(services, r => getSecao(r));
-  const labels = Object.keys(by);
-  const vals   = labels.map(s => by[s].reduce((a, r) => a + getValorItem(r), 0));
+  // Ordena por valor desc, sem limite
+  const sorted = Object.entries(by)
+    .map(([sec, rows]) => ({ sec, val: rows.reduce((a,r) => a+getValorItem(r),0) }))
+    .sort((a,b) => b.val - a.val);
+  const labels = sorted.map(s => s.sec);
+  const vals   = sorted.map(s => s.val);
+
+  // Altura dinâmica: 60px por seção, mínimo 220px, máximo 480px
+  setChartHeight('container-secao-valor', labels.length, 60, 220, 480);
 
   mkChart('chart-secao-valor', 'bar', {
     labels, datasets: [{ label: 'Valor (R$)', data: vals, backgroundColor: PALETTE }]
@@ -919,8 +956,7 @@ function renderSecaoValorChart(services) {
           maxRotation: 0,
           minRotation: 0,
           callback: function(val) {
-            const lbl = this.getLabelForValue(val);
-            return wrapLabel(lbl, 12);
+            return wrapLabel(this.getLabelForValue(val), 10);
           }
         }
       }
@@ -1131,6 +1167,22 @@ function switchTab(id, btn) {
 }
 
 // ───────────────────────────────────────────────
+// MARKDOWN → HTML (para output do Gemini)
+// ───────────────────────────────────────────────
+function mdToHtml(md) {
+  return md
+    .replace(/^### (.+)$/gm, '<p class="font-bold text-sm mt-3 mb-1" style="color:#253B35">$1</p>')
+    .replace(/^## (.+)$/gm,  '<p class="font-bold text-sm mt-4 mb-1" style="color:#253B35">$1</p>')
+    .replace(/^# (.+)$/gm,   '<p class="font-bold text-base mt-4 mb-1" style="color:#253B35">$1</p>')
+    .replace(/\*\*(.+?)\*\*/g, '<b>$1</b>')
+    .replace(/\*(.+?)\*/g,     '<i>$1</i>')
+    .replace(/^[\*\-] (.+)$/gm,'<div class="flex gap-2 mb-1"><span style="color:#44823C;flex-shrink:0">•</span><span>$1</span></div>')
+    .replace(/^\d+\. (.+)$/gm, '<div class="flex gap-2 mb-1"><span style="color:#44823C;flex-shrink:0;font-weight:600">›</span><span>$1</span></div>')
+    .replace(/\n\n/g, '<div class="mb-2"></div>')
+    .replace(/\n/g, '<br>');
+}
+
+// ───────────────────────────────────────────────
 // INSIGHTS AUTOMÁTICOS
 // ───────────────────────────────────────────────
 function runInsightsLocais() {
@@ -1279,10 +1331,7 @@ Gere: 1) 3 pontos positivos, 2) 3 alertas ou oportunidades, 3) 2 recomendações
     document.getElementById('insights-source-badge').textContent = `Gemini IA (${model})`;
     const aiOut = document.getElementById('ai-output');
     aiOut.classList.remove('hidden');
-    aiOut.innerHTML = text
-      .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')
-      .replace(/\*(.*?)\*/g, '<i>$1</i>')
-      .replace(/\n/g, '<br>');
+    aiOut.innerHTML = mdToHtml(text);
 
   } catch(e) {
     document.getElementById('insights-loading').classList.add('hidden');
