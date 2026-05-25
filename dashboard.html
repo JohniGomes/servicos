@@ -261,66 +261,18 @@
     </div>
 
     <div class="space-y-4">
-      <div>
+      <div class="relative" id="loja-picker">
         <label class="block text-xs font-semibold text-gray-600 mb-1">Loja</label>
-        <input id="import-loja" list="lojas-datalist" autocomplete="off"
-          placeholder="Digite para pesquisar a loja..."
-          class="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-300" />
-        <datalist id="lojas-datalist">
-          <option>Anhanguera</option>
-          <option>Anália Franco</option>
-          <option>Bauru</option>
-          <option>BH Norte</option>
-          <option>BH Sul</option>
-          <option>Brasília Norte</option>
-          <option>Brasília Sul</option>
-          <option>Campinas D. Pedro</option>
-          <option>Campo Grande</option>
-          <option>Contagem</option>
-          <option>Curitiba</option>
-          <option>Curitiba Atuba</option>
-          <option>Express Alto da Boa Vista</option>
-          <option>Express BH São Pedro</option>
-          <option>Express Campo Belo</option>
-          <option>Express Leblon</option>
-          <option>Express Pompéia</option>
-          <option>Express Vila Nova Conceição</option>
-          <option>Fortaleza</option>
-          <option>Goiânia</option>
-          <option>Guarulhos</option>
-          <option>Interlagos</option>
-          <option>Jaguaré</option>
-          <option>Jardim Botânico Df</option>
-          <option>Joinville</option>
-          <option>Jundiaí</option>
-          <option>Lar Center</option>
-          <option>Londrina</option>
-          <option>Maceió</option>
-          <option>Marginal Tietê 2</option>
-          <option>Morumbi</option>
-          <option>Natal</option>
-          <option>Niterói</option>
-          <option>Poa Estaleiro</option>
-          <option>Porto Alegre</option>
-          <option>Raposo Tavares</option>
-          <option>Ribeirão Preto</option>
-          <option>Ricardo Jafet</option>
-          <option>Rio Barra</option>
-          <option>Rio Norte</option>
-          <option>Salvador</option>
-          <option>Santos</option>
-          <option>Sorocaba</option>
-          <option>São Bernardo</option>
-          <option>São Caetano</option>
-          <option>São José</option>
-          <option>São José do Rio Preto</option>
-          <option>São José Dos Campos</option>
-          <option>São Leopoldo</option>
-          <option>Tamboré</option>
-          <option>Taubaté</option>
-          <option>Uberlândia</option>
-          <option>Vitória</option>
-        </datalist>
+        <div class="relative">
+          <input id="import-loja" type="text" autocomplete="off" placeholder="Selecione ou pesquise a loja..."
+            class="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 pr-8 focus:outline-none focus:ring-2 focus:ring-green-300"
+            oninput="filterLojas(this.value)" onfocus="openLojaDropdown()" />
+          <span onclick="toggleLojaDropdown()"
+            class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 cursor-pointer select-none text-xs">▼</span>
+        </div>
+        <ul id="loja-dropdown"
+          class="absolute z-50 w-full bg-white border border-gray-200 rounded-lg shadow-lg mt-1 max-h-52 overflow-y-auto hidden"
+          style="font-size:.85rem"></ul>
       </div>
 
       <div>
@@ -1528,6 +1480,73 @@ function openSnapshot() {
 function exitPrintMode() {
   document.body.classList.remove('print-mode');
 }
+
+// ───────────────────────────────────────────────
+// DROPDOWN DE LOJAS (searchable)
+// ───────────────────────────────────────────────
+const LOJAS_LIST = [
+  'Anhanguera','Anália Franco','Bauru','BH Norte','BH Sul',
+  'Brasília Norte','Brasília Sul','Campinas D. Pedro','Campo Grande',
+  'Contagem','Curitiba','Curitiba Atuba','Express Alto da Boa Vista',
+  'Express BH São Pedro','Express Campo Belo','Express Leblon',
+  'Express Pompéia','Express Vila Nova Conceição','Fortaleza','Goiânia',
+  'Guarulhos','Interlagos','Jaguaré','Jardim Botânico Df','Joinville',
+  'Jundiaí','Lar Center','Londrina','Maceió','Marginal Tietê 2',
+  'Morumbi','Natal','Niterói','Poa Estaleiro','Porto Alegre',
+  'Raposo Tavares','Ribeirão Preto','Ricardo Jafet','Rio Barra','Rio Norte',
+  'Salvador','Santos','Sorocaba','São Bernardo','São Caetano','São José',
+  'São José do Rio Preto','São José Dos Campos','São Leopoldo',
+  'Tamboré','Taubaté','Uberlândia','Vitória'
+];
+
+function renderLojaOptions(filter) {
+  const ul = document.getElementById('loja-dropdown');
+  const term = (filter || '').toLowerCase();
+  const filtered = LOJAS_LIST.filter(l => l.toLowerCase().includes(term));
+  if (!filtered.length) {
+    ul.innerHTML = '<li class="px-3 py-2 text-gray-400">Nenhuma loja encontrada</li>';
+  } else {
+    ul.innerHTML = filtered.map(l =>
+      `<li class="px-3 py-2 cursor-pointer hover:bg-green-50 hover:text-green-700"
+           onmousedown="selectLoja('${l.replace(/'/g,"\\'")}')">
+        ${filter ? l.replace(new RegExp(`(${filter})`, 'gi'), '<b>$1</b>') : l}
+      </li>`
+    ).join('');
+  }
+}
+
+function openLojaDropdown() {
+  const ul = document.getElementById('loja-dropdown');
+  renderLojaOptions(document.getElementById('import-loja').value);
+  ul.classList.remove('hidden');
+}
+
+function toggleLojaDropdown() {
+  const ul = document.getElementById('loja-dropdown');
+  if (ul.classList.contains('hidden')) {
+    document.getElementById('import-loja').focus();
+    openLojaDropdown();
+  } else {
+    ul.classList.add('hidden');
+  }
+}
+
+function filterLojas(val) {
+  renderLojaOptions(val);
+  document.getElementById('loja-dropdown').classList.remove('hidden');
+}
+
+function selectLoja(name) {
+  document.getElementById('import-loja').value = name;
+  document.getElementById('loja-dropdown').classList.add('hidden');
+}
+
+// Fecha dropdown ao clicar fora
+document.addEventListener('click', e => {
+  if (!document.getElementById('loja-picker')?.contains(e.target)) {
+    document.getElementById('loja-dropdown')?.classList.add('hidden');
+  }
+});
 
 // ───────────────────────────────────────────────
 // IMPORTAÇÃO DE ARQUIVO (CSV / Excel)
