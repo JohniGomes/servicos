@@ -332,7 +332,12 @@
       </div>
       <div class="card">
         <h3 class="card-title">Serviços por Seção — Valor (R$)</h3>
-        <div id="container-secao-valor" style="position:relative"><canvas id="chart-secao-valor"></canvas></div>
+        <!-- Wrapper com scroll horizontal -->
+        <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
+          <div id="container-secao-valor" style="position:relative;height:280px;min-width:100%">
+            <canvas id="chart-secao-valor"></canvas>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -479,10 +484,10 @@ const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxrfxOUIuYQ_4CO
 function loadConfig() { /* URL fixa — nada a carregar */ }
 function saveConfig() { /* URL fixa — nada a salvar */ }
 
-// Coluna M = "Status do produto" — serviços começam com SERVICO
+// Coluna M = "Status do produto" — serviços começam com SERVICO, exceto CANCELADO
 function isService(row) {
   const val = (getField(row, 'Status do produto', 'status do produto') || '').toUpperCase().trim();
-  return val.startsWith('SERVICO');
+  return val.startsWith('SERVICO') && !val.includes('CANCELADO');
 }
 
 // Coluna J = "Descrição" — visitas técnicas começam com VISITA
@@ -929,8 +934,15 @@ function renderSecaoValorChart(services) {
   const labels = sorted.map(s => s.sec);
   const vals   = sorted.map(s => s.val);
 
-  // Altura dinâmica: 60px por seção, mínimo 220px, máximo 480px
-  setChartHeight('container-secao-valor', labels.length, 60, 220, 480);
+  // Largura dinâmica: 80px por seção, mínimo para mostrar 8 sem scroll
+  const barW = 80;
+  const minVisible = 8;
+  const containerEl = document.getElementById('container-secao-valor');
+  if (containerEl) {
+    const totalW = Math.max(labels.length * barW, minVisible * barW);
+    containerEl.style.width = totalW + 'px';
+    containerEl.style.minWidth = '100%';
+  }
 
   mkChart('chart-secao-valor', 'bar', {
     labels, datasets: [{ label: 'Valor (R$)', data: vals, backgroundColor: PALETTE }]
@@ -946,7 +958,7 @@ function renderSecaoValorChart(services) {
         clip: false,
       }
     },
-    layout: { padding: { top: 28, bottom: 8 } },
+    layout: { padding: { top: 28, bottom: 4 } },
     scales: {
       y: { display: false, grid: { display: false }, border: { display: false } },
       x: {
