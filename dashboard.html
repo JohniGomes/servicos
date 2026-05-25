@@ -632,27 +632,31 @@ function parseCSV(text) {
   text = text.replace(/^﻿/, '').replace(/\r\n/g, '\n').replace(/\r/g, '\n');
   const lines = text.split('\n').filter(l => l.trim());
   if (lines.length < 2) return [];
-  const headers = parseCSVLine(lines[0]).map(h => h.trim());
+
+  // Detecta separador automaticamente: ponto e vírgula (Excel BR) ou vírgula
+  const firstLine = lines[0];
+  const sep = (firstLine.split(';').length > firstLine.split(',').length) ? ';' : ',';
+
+  const headers = parseCSVLine(firstLine, sep).map(h => h.trim().replace(/^"|"$/g, ''));
   const rows = [];
   for (let i = 1; i < lines.length; i++) {
-    const vals = parseCSVLine(lines[i]);
-    // Ignora linhas completamente vazias
+    const vals = parseCSVLine(lines[i], sep);
     if (vals.every(v => !v.trim())) continue;
     const obj = {};
-    headers.forEach((h, idx) => { obj[h] = (vals[idx] || '').trim(); });
+    headers.forEach((h, idx) => { obj[h] = (vals[idx] || '').trim().replace(/^"|"$/g, ''); });
     rows.push(obj);
   }
   return rows;
 }
 
-function parseCSVLine(line) {
+function parseCSVLine(line, sep = ',') {
   const result = [];
   let current = '';
   let inQuotes = false;
   for (let i = 0; i < line.length; i++) {
     const c = line[i];
     if (c === '"') { inQuotes = !inQuotes; }
-    else if (c === ',' && !inQuotes) { result.push(current); current = ''; }
+    else if (c === sep && !inQuotes) { result.push(current); current = ''; }
     else { current += c; }
   }
   result.push(current);
