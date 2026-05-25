@@ -598,7 +598,7 @@ async function loadData() {
 
     if (json.erro) throw new Error(json.erro);
     if (!json.rows || json.rows.length === 0) {
-      showMsgInfo('A planilha está vazia. Adicione dados e tente novamente.');
+      showMsgInfo('Sem dados. Use o botão de Importar para carregar seus dados.');
       return;
     }
 
@@ -637,7 +637,6 @@ function showErroAcesso(detalhe) {
       </ol>
     </div>
     <button onclick="loadData()" class="mt-4 btn-primary px-5 py-2 rounded-lg font-semibold text-sm">↻ Tentar novamente</button>
-    <button onclick="loadDemoData()" class="mt-2 ml-2 btn-secondary px-5 py-2 rounded-lg font-semibold text-sm">Ver Demo</button>
   `;
   document.getElementById('kpi-master').innerHTML = '';
 }
@@ -647,7 +646,6 @@ function showMsgInfo(msg) {
   document.getElementById('no-data-msg').innerHTML = `
     <div class="text-5xl mb-4">📋</div>
     <h3 class="text-lg font-semibold mb-2" style="color:#253B35">${msg}</h3>
-    <button onclick="loadDemoData()" class="mt-2 btn-secondary px-5 py-2 rounded-lg font-semibold text-sm">Ver Demo</button>
   `;
 }
 
