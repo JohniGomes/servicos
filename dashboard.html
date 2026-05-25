@@ -388,8 +388,7 @@
       </div>
       <div class="card">
         <h3 class="card-title">Serviços por Seção — Valor (R$)</h3>
-        <div id="container-secao-valor" style="position:relative;height:460px;width:100%">
-          <canvas id="chart-secao-valor"></canvas>
+        <div id="container-secao-valor" style="position:relative;"><canvas id="chart-secao-valor"></canvas>
         </div>
       </div>
     </div>
@@ -994,51 +993,41 @@ function renderVendedorChart(services) {
   });
 }
 
-// Gráfico: Serviços por Seção — Valor (R$) — todas as seções
+// Gráfico: Serviços por Seção — Valor (R$) — barras horizontais (igual ao de Vendedores)
 function renderSecaoValorChart(services) {
   const by = groupByFn(services, r => getSecao(r));
-  // Ordena por valor desc, sem limite
   const sorted = Object.entries(by)
     .map(([sec, rows]) => ({ sec, val: rows.reduce((a,r) => a+getValorItem(r),0) }))
     .sort((a,b) => b.val - a.val);
-  const labels = sorted.map(s => s.sec);
-  const vals   = sorted.map(s => s.val);
+
+  // Altura dinâmica: 44px por seção, mínimo 440px
+  setChartHeight('container-secao-valor', sorted.length, 44, 440, 700);
 
   mkChart('chart-secao-valor', 'bar', {
-    labels,
-    datasets: [{
-      label: 'Valor (R$)',
-      data: vals,
-      backgroundColor: PALETTE,
-      barPercentage: 0.6,
-      categoryPercentage: 0.75,
-    }]
+    labels: sorted.map(s => s.sec),
+    datasets: [{ label: 'Valor (R$)', data: sorted.map(s => s.val), backgroundColor: PALETTE }]
   }, {
+    indexAxis: 'y',
     plugins: {
       legend: { display: false },
       datalabels: {
         anchor: 'end',
-        align: 'top',
-        rotation: -90,
+        align: 'end',
         color: '#253B35',
         font: { size: 11, weight: '600' },
         formatter: v => 'R$ ' + fmtK(v),
         clip: false,
       }
     },
-    layout: { padding: { top: 56, bottom: 16, left: 8, right: 8 } },
+    layout: { padding: { right: 80 } },
     scales: {
-      y: { display: false, grid: { display: false }, border: { display: false } },
-      x: {
+      x: { display: false, grid: { display: false }, border: { display: false } },
+      y: {
         grid: { display: false }, border: { display: false },
         ticks: {
-          font: { size: 12 },
-          maxRotation: 90,
-          minRotation: 90,
-          autoSkip: false,
+          font: { size: 11 },
           callback: function(val) {
-            const lbl = this.getLabelForValue(val);
-            return lbl.length > 20 ? lbl.slice(0, 19) + '…' : lbl;
+            return wrapLabel(this.getLabelForValue(val), 20);
           }
         }
       }
