@@ -303,21 +303,9 @@
 
   <!-- FILTER BAR (compartilhado entre abas) -->
   <div class="filter-bar">
-    <!-- mobile: 4 filtros em grid 2 colunas + botões -->
+    <!-- mobile: filtros em grid 2 colunas + botões -->
     <div class="sm:hidden">
       <div class="grid grid-cols-2 gap-2 mb-2">
-        <div>
-          <label class="text-xs text-gray-500 font-medium block mb-1">Data início</label>
-          <select id="filter-start-m" class="w-full text-xs border border-gray-200 rounded-lg px-2 py-1.5">
-            <option value="">Todas</option>
-          </select>
-        </div>
-        <div>
-          <label class="text-xs text-gray-500 font-medium block mb-1">Data fim</label>
-          <select id="filter-end-m" class="w-full text-xs border border-gray-200 rounded-lg px-2 py-1.5">
-            <option value="">Todas</option>
-          </select>
-        </div>
         <div>
           <label class="text-xs text-gray-500 font-medium block mb-1">Vendedor</label>
           <select id="filter-vendedor-m" class="w-full text-xs border border-gray-200 rounded-lg px-2 py-1.5">
@@ -345,18 +333,6 @@
 
     <!-- versão desktop (sm+) -->
     <div class="hidden sm:flex flex-wrap items-end gap-3">
-      <div class="flex-1 min-w-[140px]">
-        <label class="text-xs text-gray-500 font-medium block mb-1">Data início</label>
-        <select id="filter-start" class="w-full text-sm border border-gray-200 rounded-lg px-2 py-1.5">
-          <option value="">Todas</option>
-        </select>
-      </div>
-      <div class="flex-1 min-w-[140px]">
-        <label class="text-xs text-gray-500 font-medium block mb-1">Data fim</label>
-        <select id="filter-end" class="w-full text-sm border border-gray-200 rounded-lg px-2 py-1.5">
-          <option value="">Todas</option>
-        </select>
-      </div>
       <div class="flex-1 min-w-[140px]">
         <label class="text-xs text-gray-500 font-medium block mb-1">Vendedor</label>
         <select id="filter-vendedor" class="w-full text-sm border border-gray-200 rounded-lg px-2 py-1.5">
@@ -855,13 +831,6 @@ function $html(id, html) {
 function populateFilters() {
   const serviceData = rawData.filter(r => isService(r));
 
-  // Datas disponíveis
-  const datas = [...new Set(rawData.map(r => getData(r)).filter(Boolean))].sort();
-  const fmtDate = d => { try { const [y,m,dd] = d.split('-'); return `${dd}/${m}/${y}`; } catch(e) { return d; } };
-  const dOpts = '<option value="">Todas</option>' + datas.map(d => `<option value="${d}">${fmtDate(d)}</option>`).join('');
-  $html('filter-start', dOpts);
-  $html('filter-end',   dOpts);
-
   // Vendedor — apenas vendedores com dados de serviço
   const vendedores = [...new Set(serviceData.map(r => getLDAP(r)).filter(Boolean))].sort();
   const vOpts = '<option value="">Todos</option>' +
@@ -880,16 +849,11 @@ function populateFilters() {
 }
 
 function applyFilters() {
-  const start    = $val('filter-start');
-  const end      = $val('filter-end');
   const vendedor = $val('filter-vendedor');
   const secao    = $val('filter-secao');
   const loja     = $val('filter-loja');
 
   filteredData = rawData.filter(r => {
-    const d = getData(r);
-    if (start    && d < start) return false;
-    if (end      && d > end)   return false;
     if (vendedor && getLDAP(r) !== vendedor) return false;
     if (secao    && getSecao(r) !== secao)   return false;
     if (loja     && (r.__loja || '') !== loja) return false;
@@ -899,8 +863,7 @@ function applyFilters() {
 }
 
 function applyFiltersMobile() {
-  // Sincroniza valores dos inputs mobile para os desktop antes de filtrar
-  ['filter-start','filter-end','filter-vendedor','filter-secao','filter-loja'].forEach(id => {
+  ['filter-vendedor','filter-secao','filter-loja'].forEach(id => {
     const m = document.getElementById(id + '-m');
     const d = document.getElementById(id);
     if (m && d) d.value = m.value;
@@ -909,7 +872,7 @@ function applyFiltersMobile() {
 }
 
 function clearFilters() {
-  ['filter-start','filter-end','filter-vendedor','filter-secao','filter-loja'].forEach(id => $set(id, ''));
+  ['filter-vendedor','filter-secao','filter-loja'].forEach(id => $set(id, ''));
   filteredData = [...rawData];
   renderAll();
 }
