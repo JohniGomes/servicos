@@ -8,7 +8,6 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
   <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <style>
     :root {
       --lm-green:   #44823C;
@@ -161,16 +160,23 @@
     @media (max-width: 1280px) { #main-content { max-width: 94%; } }
     @media (max-width: 900px)  { #main-content { max-width: 100%; } }
 
-/* ── PRINT ── */
-    @media print {
-      body { background: white !important; }
-      #login-screen, .lm-header, .filter-bar, .tab-bar,
-      #tab-analises, #no-data-msg, #modal-import, #modal-snapshot,
-      #btn-snapshot { display: none !important; }
-      #tab-resumo { display: block !important; }
-      #main-content { max-width: 100% !important; padding: 0 !important; }
-      .card { box-shadow: none !important; border: 1px solid #e5e7eb !important; page-break-inside: avoid; }
-      .grid { grid-template-columns: 1fr 1fr !important; }
+/* ── MODO PRINT ── */
+    body.print-mode .lm-header  { display: none !important; }
+    body.print-mode .filter-bar { display: none !important; }
+    body.print-mode .tab-bar    { display: none !important; }
+    body.print-mode #main-content { max-width: 100% !important; padding: 8px !important; }
+    #print-exit-btn {
+      display: none;
+      position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+      z-index: 9999; background: #253B35; color: white;
+      padding: 10px 28px; border-radius: 99px; font-size: .85rem; font-weight: 700;
+      box-shadow: 0 4px 20px rgba(0,0,0,.4); cursor: pointer; border: 2px solid #BCE05E;
+      animation: pulse-btn 1.5s ease-in-out infinite;
+    }
+    body.print-mode #print-exit-btn { display: block; }
+    @keyframes pulse-btn {
+      0%,100% { box-shadow: 0 4px 20px rgba(0,0,0,.4); }
+      50%      { box-shadow: 0 6px 28px rgba(188,224,94,.6); }
     }
   </style>
 </head>
@@ -288,6 +294,9 @@
   </div>
 </div>
 
+
+<!-- Botão flutuante "Sair do modo print" -->
+<button id="print-exit-btn" onclick="exitPrintMode()">✕ Sair do modo print</button>
 
 <!-- ── MAIN ── -->
 <main class="px-3 sm:px-6 py-4 sm:py-6" id="main-content">
@@ -1488,44 +1497,25 @@ Gere: 1) 3 pontos positivos, 2) 3 alertas ou oportunidades, 3) 2 recomendações
 }
 
 // ───────────────────────────────────────────────
-// SNAPSHOT — Captura a tela e baixa como imagem
+// MODO PRINT — esconde header/filtros para print limpo
 // ───────────────────────────────────────────────
-async function openSnapshot() {
-  if (!filteredData.filter(isService).length) {
-    showToast('Sem dados para capturar.', 'amber'); return;
+function openSnapshot() {
+  window.scrollTo({ top: 0, behavior: 'instant' });
+  document.body.classList.add('print-mode');
+  // Garante que a aba Resumo está ativa
+  const resumoPane = document.getElementById('tab-resumo');
+  const resumoBtn  = document.querySelector('.tab-btn');
+  if (resumoPane && !resumoPane.classList.contains('active')) {
+    document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    resumoPane.classList.add('active');
+    resumoBtn.classList.add('active');
   }
+  showToast('📸 Tire o print agora e cole no WhatsApp!', 'green');
+}
 
-  const btn = document.getElementById('btn-snapshot');
-  btn.textContent = '⏳ Gerando...';
-  btn.disabled = true;
-
-  try {
-    const target = document.getElementById('main-content');
-
-    const canvas = await html2canvas(target, {
-      backgroundColor: '#f0f2ee',
-      scale: 2,           // alta resolução
-      useCORS: true,
-      logging: false,
-      scrollX: 0,
-      scrollY: -window.scrollY,
-      windowWidth: target.scrollWidth,
-    });
-
-    // Baixa a imagem
-    const ts = new Date().toLocaleDateString('pt-BR').replace(/\//g,'-');
-    const link = document.createElement('a');
-    link.download = `resumo-servicos-${ts}.png`;
-    link.href = canvas.toDataURL('image/png');
-    link.click();
-
-    showToast('✅ Imagem salva! Agora é só enviar no WhatsApp.', 'green');
-  } catch(e) {
-    showToast('Erro ao gerar imagem: ' + e.message, 'amber');
-  } finally {
-    btn.textContent = '📸 Resumo';
-    btn.disabled = false;
-  }
+function exitPrintMode() {
+  document.body.classList.remove('print-mode');
 }
 
 // ───────────────────────────────────────────────
