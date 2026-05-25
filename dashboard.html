@@ -388,7 +388,7 @@
       </div>
       <div class="card">
         <h3 class="card-title">Serviços por Seção — Valor (R$)</h3>
-        <div id="container-secao-valor" style="position:relative;height:400px;width:100%">
+        <div id="container-secao-valor" style="position:relative;height:460px;width:100%">
           <canvas id="chart-secao-valor"></canvas>
         </div>
       </div>
@@ -1025,19 +1025,19 @@ function renderSecaoValorChart(services) {
         clip: false,
       }
     },
-    layout: { padding: { top: 32, bottom: 4, left: 8, right: 8 } },
+    layout: { padding: { top: 32, bottom: 16, left: 8, right: 8 } },
     scales: {
       y: { display: false, grid: { display: false }, border: { display: false } },
       x: {
         grid: { display: false }, border: { display: false },
         ticks: {
-          font: { size: 10 },
+          font: { size: 9 },
           maxRotation: 0,
           minRotation: 0,
           autoSkip: false,
           callback: function(val) {
             const lbl = this.getLabelForValue(val);
-            return wrapLabel(lbl, 10);
+            return wrapLabel(lbl, 7);
           }
         }
       }
