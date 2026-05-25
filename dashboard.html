@@ -1031,13 +1031,13 @@ function renderSecaoValorChart(services) {
       x: {
         grid: { display: false }, border: { display: false },
         ticks: {
-          font: { size: 9 },
-          maxRotation: 0,
-          minRotation: 0,
+          font: { size: 10 },
+          maxRotation: 90,
+          minRotation: 90,
           autoSkip: false,
           callback: function(val) {
             const lbl = this.getLabelForValue(val);
-            return wrapLabel(lbl, 7);
+            return lbl.length > 20 ? lbl.slice(0, 19) + '…' : lbl;
           }
         }
       }
