@@ -334,7 +334,7 @@
         <h3 class="card-title">Serviços por Seção — Valor (R$)</h3>
         <!-- Wrapper com scroll horizontal -->
         <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
-          <div id="container-secao-valor" style="position:relative;height:360px;min-width:100%">
+          <div id="container-secao-valor" style="position:relative;height:440px;min-width:100%">
             <canvas id="chart-secao-valor"></canvas>
           </div>
         </div>
@@ -890,7 +890,7 @@ function renderVendedorChart(services) {
     .slice(0, 10);
 
   // Altura dinâmica: 44px por vendedor, mínimo 360px para igualar o gráfico de seções
-  setChartHeight('container-vendedor-val', sorted.length, 44, 360, 520);
+  setChartHeight('container-vendedor-val', sorted.length, 44, 440, 560);
 
   mkChart('chart-vendedor-val', 'bar', {
     labels: sorted.map(r => r.name),
