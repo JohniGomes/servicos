@@ -538,6 +538,23 @@ function rebuildRawData() {
   rawData = [...gsRows, ...imported];
 }
 
+function saveStoreData() {
+  try {
+    localStorage.setItem('painel_storeData', JSON.stringify(storeData));
+  } catch(e) {
+    showToast('⚠ Dados grandes demais para salvar no navegador.', 'amber');
+  }
+}
+
+function loadStoreData() {
+  try {
+    const saved = localStorage.getItem('painel_storeData');
+    if (saved) storeData = JSON.parse(saved);
+  } catch(e) {
+    storeData = {};
+  }
+}
+
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxrfxOUIuYQ_4COBkwSUTxDf9qXAOlTOAGkEAuvNpaHt98DUEN3VGKGaKB1sVyrPZy6/exec';
 
 function loadConfig() { /* URL fixa — nada a carregar */ }
@@ -588,7 +605,9 @@ async function loadData() {
 
     const ts = new Date().toLocaleString('pt-BR');
     const svcCount = rawData.filter(r => isService(r)).length;
-    document.getElementById('last-update').textContent = `Atualizado: ${ts} — ${svcCount} serviços`;
+    const importedLojas = Object.keys(storeData);
+    const extraInfo = importedLojas.length ? ` + ${importedLojas.length} loja(s) importada(s)` : '';
+    document.getElementById('last-update').textContent = `Atualizado: ${ts} — ${svcCount} serviços${extraInfo}`;
     showToast(`✅ ${svcCount} serviços carregados!`, 'green');
 
   } catch (e) {
@@ -1463,6 +1482,7 @@ function _updateImportLojas() {
 function removeStore(loja) {
   if (!confirm(`Remover dados importados de "${loja}"?`)) return;
   delete storeData[loja];
+  saveStoreData();
   rebuildRawData();
   populateFilters();
   filteredData = [...rawData];
@@ -1523,6 +1543,7 @@ async function processImport() {
     // Tagueia cada linha com a loja selecionada
     rows = rows.map(r => ({ ...r, __loja: loja }));
     storeData[loja] = rows;
+    saveStoreData();
     rebuildRawData();
     populateFilters();
     filteredData = [...rawData];
@@ -1586,6 +1607,8 @@ function showApp() {
   // Restaura chave Gemini salva
   const savedKey = localStorage.getItem('gemini_key');
   if (savedKey) document.getElementById('gemini-key').value = savedKey;
+  // Restaura dados importados
+  loadStoreData();
   loadConfig();
   loadData();
 }
