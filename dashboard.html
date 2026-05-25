@@ -382,7 +382,7 @@
 
     <section class="mb-6">
       <h2 class="section-title">KPIs Master</h2>
-      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4" id="kpi-master"></div>
+      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4" id="kpi-master"></div>
     </section>
 
     <!-- Gráficos resumo -->
@@ -1034,18 +1034,22 @@ function renderVendedorChart(services) {
 const SECOES_FIXAS = [
   'ENCANAMENTO','SANITARIO','JARDIM','MATERIAIS','CERAMICA','FERRAMENTAS',
   'COZINHAS','PISOS LAMINADOS E VINILICOS','ILUMINACAO','ELETRICIDADE',
-  'PINTURA','FERRAGENS','DECORACAO','CARPINTARIA E MADEIRA','ORGANIZACAO','MARKETPLACE'
+  'PINTURA','FERRAGENS','DECORACAO','CARPINTARIA E MADEIRA','ORGANIZACAO'
 ];
 
 // Gráfico: Serviços por Seção — Valor (R$) — barras horizontais, 16 seções fixas
 function renderSecaoValorChart(services) {
   const by = groupByFn(services, r => getSecao(r));
 
-  // Monta todas as 16 seções — valor 0 se não tiver dados
+  // Monta as 15 seções fixas — valor 0 se não tiver dados
   const all = SECOES_FIXAS.map(sec => ({
     sec,
     val: (by[sec] || []).reduce((a,r) => a + getValorItem(r), 0)
   }));
+
+  // Marketplace: só aparece se houver vendas
+  const mktVal = (by['MARKETPLACE'] || []).reduce((a,r) => a + getValorItem(r), 0);
+  if (mktVal > 0) all.push({ sec: 'MARKETPLACE', val: mktVal });
 
   // Ordena: com valor desc primeiro, sem valor (0) ao final
   const sorted = [
