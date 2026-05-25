@@ -704,7 +704,24 @@ function getValorItem(row)  { return toNum(getField(row, 'Valor total do Item', 
 function getValorTotal(row) { return toNum(getField(row, 'Valor Total', 'Valor total', 'valor total')); } // col E — total do pedido
 function getQtd(row)        { return toNum(getField(row, 'Quantidade', 'quantidade', 'Qtd')); }
 function getPedido(row)     { return getField(row, 'Número do pedido', 'Numero do pedido', 'número do pedido') || Math.random(); }
-function getLDAP(row)       { return getField(row, 'LDAP', 'ldap', 'Vendedor', 'vendedor', 'Nome do Vendedor', 'Consultor', 'consultor'); }
+function getLDAP(row) {
+  // Tenta colunas conhecidas
+  const val = getField(row, 'LDAP', 'ldap', 'Vendedor', 'vendedor', 'Nome do Vendedor', 'Consultor', 'consultor');
+  // Se o valor parecer um código de loja (ex: "0020-LOJA BH SUL") ou estiver vazio,
+  // procura uma coluna cujo valor tenha padrão de matrícula "NNNNN - NOME"
+  if (!val || /^\d{4}-LOJA/i.test(val) || /^0020/i.test(val)) {
+    const entry = Object.entries(row).find(([k, v]) =>
+      /^\d{5,}\s*[-–]\s*\w/.test(String(v))
+    );
+    if (entry) return entry[1];
+    // Se não achar matrícula, tenta coluna com "nome" no cabeçalho excluindo cliente/cpf
+    const nameCol = Object.entries(row).find(([k, v]) =>
+      /nome/i.test(k) && !/cliente|cpf|cnpj/i.test(k) && String(v).trim()
+    );
+    if (nameCol) return nameCol[1];
+  }
+  return val;
+}
 function getDesc(row)       { return getField(row, 'Descrição', 'Descricao', 'descricao', 'Descrição'); }
 function getCanal(row)      { return getField(row, 'Loja/Canal', 'Canal', 'canal'); }
 function getStatus(row)     { return getField(row, 'Status do Pedido de Venda', 'Status do Pedido', 'status'); }
