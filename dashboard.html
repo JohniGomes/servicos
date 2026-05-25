@@ -153,6 +153,49 @@
       text-align: center;
     }
     #app { display: none; }
+
+    /* ── LARGURA RESPONSIVA POR TAMANHO DE TELA ── */
+    #main-content { max-width: 72%; margin-left: auto; margin-right: auto; }
+    @media (max-width: 1600px) { #main-content { max-width: 85%; } }
+    @media (max-width: 1280px) { #main-content { max-width: 94%; } }
+    @media (max-width: 900px)  { #main-content { max-width: 100%; } }
+
+    /* ── MODAL SNAPSHOT (resumo para WhatsApp) ── */
+    #modal-snapshot { display:none; position:fixed; inset:0; z-index:9999; background:rgba(0,0,0,.6);
+      align-items:center; justify-content:center; padding:16px; overflow-y:auto; }
+    #modal-snapshot.open { display:flex; }
+    #snapshot-card {
+      background:#f0f2ee; border-radius:20px; width:100%; max-width:520px;
+      box-shadow:0 24px 64px rgba(0,0,0,.35); overflow:hidden;
+    }
+    #snapshot-card .snap-header {
+      background:linear-gradient(135deg,#253B35 0%,#44823C 100%);
+      padding:16px 20px; display:flex; align-items:center; gap:12px;
+    }
+    #snapshot-card .snap-kpi-grid {
+      display:grid; grid-template-columns:1fr 1fr; gap:10px; padding:14px 16px 0;
+    }
+    #snapshot-card .snap-kpi {
+      background:white; border-radius:12px; padding:10px 14px;
+      border-left:4px solid #44823C;
+    }
+    #snapshot-card .snap-table { padding:14px 16px 16px; }
+    #snapshot-card .snap-table table { width:100%; border-collapse:collapse; font-size:.78rem; }
+    #snapshot-card .snap-table th { color:#9EA5B6; font-size:.7rem; text-align:left; padding-bottom:6px; border-bottom:1px solid #e5e7eb; }
+    #snapshot-card .snap-table td { padding:5px 4px; border-bottom:1px solid #f3f4f6; color:#374151; }
+    #snapshot-card .snap-table td.val { text-align:right; font-weight:600; color:#44823C; font-family:monospace; }
+
+    /* ── PRINT ── */
+    @media print {
+      body { background: white !important; }
+      #login-screen, .lm-header, .filter-bar, .tab-bar,
+      #tab-analises, #no-data-msg, #modal-import, #modal-snapshot,
+      #btn-snapshot { display: none !important; }
+      #tab-resumo { display: block !important; }
+      #main-content { max-width: 100% !important; padding: 0 !important; }
+      .card { box-shadow: none !important; border: 1px solid #e5e7eb !important; page-break-inside: avoid; }
+      .grid { grid-template-columns: 1fr 1fr !important; }
+    }
   </style>
 </head>
 <body>
@@ -220,6 +263,7 @@
 
     <div class="flex items-center gap-2">
       <div id="loader" class="loader hidden"></div>
+      <button id="btn-snapshot" onclick="openSnapshot()" class="text-xs bg-white/15 text-white px-3 py-1.5 rounded-lg font-semibold hover:bg-white/25 border border-white/20">📸 Resumo</button>
       <button onclick="openImport()" class="text-xs bg-white/15 text-white px-3 py-1.5 rounded-lg font-semibold hover:bg-white/25 border border-white/20">⬆ Importar</button>
       <button onclick="loadData()" class="text-xs btn-secondary px-3 py-1.5 rounded-lg font-semibold">↻ Atualizar</button>
     </div>
@@ -269,8 +313,84 @@
 </div>
 
 
+<!-- ══════ MODAL SNAPSHOT (Resumo WhatsApp) ══════ -->
+<div id="modal-snapshot" onclick="if(event.target===this)closeSnapshot()">
+  <div id="snapshot-card">
+    <!-- Header -->
+    <div class="snap-header">
+      <img src="logo.jpg" alt="Leroy Merlin" style="height:36px;width:auto;flex-shrink:0">
+      <div>
+        <p class="text-white font-bold text-sm leading-tight">Painel de Serviços</p>
+        <p class="text-lime-200 text-xs" id="snap-subtitulo">—</p>
+      </div>
+      <button onclick="closeSnapshot()" class="ml-auto text-white/60 hover:text-white text-xl leading-none">✕</button>
+    </div>
+
+    <!-- Receita destaque -->
+    <div style="margin:14px 16px 0;background:linear-gradient(135deg,#253B35,#44823C);border-radius:14px;padding:14px 18px">
+      <p class="text-xs font-semibold text-lime-300 uppercase tracking-widest mb-1">Receita Total de Serviços</p>
+      <p class="text-3xl font-bold text-white" id="snap-receita">—</p>
+      <div class="flex gap-4 mt-1">
+        <p class="text-xs text-lime-200" id="snap-linhas">—</p>
+        <p class="text-xs text-lime-200" id="snap-ticket">—</p>
+      </div>
+    </div>
+
+    <!-- KPIs -->
+    <div class="snap-kpi-grid">
+      <div class="snap-kpi">
+        <div class="text-xs text-gray-400 mb-0.5">Serviços Vendidos</div>
+        <div class="text-xl font-bold text-gray-800" id="snap-servicos">—</div>
+      </div>
+      <div class="snap-kpi">
+        <div class="text-xs text-gray-400 mb-0.5">Visitas Técnicas</div>
+        <div class="text-xl font-bold text-gray-800" id="snap-visitas">—</div>
+      </div>
+      <div class="snap-kpi">
+        <div class="text-xs text-gray-400 mb-0.5">Vendedores</div>
+        <div class="text-xl font-bold text-gray-800" id="snap-vendedores">—</div>
+      </div>
+      <div class="snap-kpi">
+        <div class="text-xs text-gray-400 mb-0.5">Seções com Serviço</div>
+        <div class="text-xl font-bold text-gray-800" id="snap-secoes">—</div>
+      </div>
+    </div>
+
+    <!-- Top 5 Vendedores -->
+    <div class="snap-table">
+      <p class="text-xs font-bold uppercase tracking-wide mb-2" style="color:#253B35">Top 5 Vendedores</p>
+      <table>
+        <thead><tr>
+          <th>Vendedor</th>
+          <th style="text-align:right">R$ Total</th>
+          <th style="text-align:right">%</th>
+        </tr></thead>
+        <tbody id="snap-top-vend"></tbody>
+      </table>
+    </div>
+
+    <!-- Top 5 Seções -->
+    <div class="snap-table" style="padding-top:0">
+      <p class="text-xs font-bold uppercase tracking-wide mb-2" style="color:#253B35">Serviços por Seção</p>
+      <table>
+        <thead><tr>
+          <th>Seção</th>
+          <th style="text-align:right">R$ Total</th>
+          <th style="text-align:right">%</th>
+        </tr></thead>
+        <tbody id="snap-top-sec"></tbody>
+      </table>
+    </div>
+
+    <!-- Rodapé -->
+    <div style="background:#253B35;padding:8px 16px;text-align:center">
+      <p class="text-xs text-lime-200" id="snap-footer">—</p>
+    </div>
+  </div>
+</div>
+
 <!-- ── MAIN ── -->
-<main class="mx-auto px-3 sm:px-6 py-4 sm:py-6" style="max-width:72%" id="main-content">
+<main class="px-3 sm:px-6 py-4 sm:py-6" id="main-content">
 
   <!-- FILTER BAR (compartilhado entre abas) -->
   <div class="filter-bar">
@@ -1465,6 +1585,61 @@ Gere: 1) 3 pontos positivos, 2) 3 alertas ou oportunidades, 3) 2 recomendações
     document.getElementById('insights-loading').classList.add('hidden');
     document.getElementById('insights-content').classList.remove('hidden');
   }
+}
+
+// ───────────────────────────────────────────────
+// SNAPSHOT — Resumo para WhatsApp
+// ───────────────────────────────────────────────
+function openSnapshot() {
+  const services = filteredData.filter(isService);
+  const visits   = filteredData.filter(isVisit);
+  if (!services.length) { showToast('Sem dados para gerar o resumo.', 'amber'); return; }
+
+  const totalVal = services.reduce((s,r) => s + getValorItem(r), 0);
+  const sellers  = new Set(services.filter(r => getLDAP(r) && !getLDAP(r).toUpperCase().includes('ECOMMERCE')).map(r => getLDAP(r)));
+  const secoes   = new Set(services.map(r => getSecao(r)).filter(Boolean));
+  const ticket   = totalVal / services.length;
+
+  // Filtro ativo
+  const lojaAtiva = $val('filter-loja');
+  const ts = new Date().toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
+  document.getElementById('snap-subtitulo').textContent = (lojaAtiva || 'Todas as Lojas') + ' • ' + ts;
+  document.getElementById('snap-receita').textContent   = fmtBRL(totalVal);
+  document.getElementById('snap-linhas').textContent    = fmtQtd(services.length) + ' serviços';
+  document.getElementById('snap-ticket').textContent    = 'Ticket médio: ' + fmtBRL(ticket);
+  document.getElementById('snap-servicos').textContent  = fmtQtd(services.length);
+  document.getElementById('snap-visitas').textContent   = fmtQtd(visits.length);
+  document.getElementById('snap-vendedores').textContent = sellers.size;
+  document.getElementById('snap-secoes').textContent    = secoes.size;
+  document.getElementById('snap-footer').textContent    = 'Gerado em ' + ts + ' • Painel de Serviços Leroy Merlin';
+
+  // Top 5 vendedores
+  const byV = groupByFn(services, r => getLDAP(r));
+  const topV = Object.entries(byV)
+    .map(([k,v]) => ({ name: k.split(' - ').slice(1).join(' - ') || k, val: v.reduce((s,r)=>s+getValorItem(r),0) }))
+    .sort((a,b)=>b.val-a.val).slice(0,5);
+  document.getElementById('snap-top-vend').innerHTML = topV.map(r => {
+    const pct = totalVal > 0 ? (r.val/totalVal*100).toFixed(1) : '0.0';
+    return `<tr><td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.name}</td>
+      <td class="val">${fmtBRL(r.val)}</td><td style="text-align:right;color:#9EA5B6;font-size:.7rem">${pct}%</td></tr>`;
+  }).join('');
+
+  // Top seções
+  const byS = groupByFn(services, r => getSecao(r));
+  const topS = Object.entries(byS)
+    .map(([k,v]) => ({ name: k, val: v.reduce((s,r)=>s+getValorItem(r),0) }))
+    .sort((a,b)=>b.val-a.val);
+  document.getElementById('snap-top-sec').innerHTML = topS.map(r => {
+    const pct = totalVal > 0 ? (r.val/totalVal*100).toFixed(1) : '0.0';
+    return `<tr><td>${r.name}</td>
+      <td class="val">${fmtBRL(r.val)}</td><td style="text-align:right;color:#9EA5B6;font-size:.7rem">${pct}%</td></tr>`;
+  }).join('');
+
+  document.getElementById('modal-snapshot').classList.add('open');
+}
+
+function closeSnapshot() {
+  document.getElementById('modal-snapshot').classList.remove('open');
 }
 
 // ───────────────────────────────────────────────
