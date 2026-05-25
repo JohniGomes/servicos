@@ -704,7 +704,7 @@ function getValorItem(row)  { return toNum(getField(row, 'Valor total do Item', 
 function getValorTotal(row) { return toNum(getField(row, 'Valor Total', 'Valor total', 'valor total')); } // col E — total do pedido
 function getQtd(row)        { return toNum(getField(row, 'Quantidade', 'quantidade', 'Qtd')); }
 function getPedido(row)     { return getField(row, 'Número do pedido', 'Numero do pedido', 'número do pedido') || Math.random(); }
-function getLDAP(row)       { return getField(row, 'LDAP', 'ldap', 'Vendedor'); }
+function getLDAP(row)       { return getField(row, 'LDAP', 'ldap', 'Vendedor', 'vendedor', 'Nome do Vendedor', 'Consultor', 'consultor'); }
 function getDesc(row)       { return getField(row, 'Descrição', 'Descricao', 'descricao', 'Descrição'); }
 function getCanal(row)      { return getField(row, 'Loja/Canal', 'Canal', 'canal'); }
 function getStatus(row)     { return getField(row, 'Status do Pedido de Venda', 'Status do Pedido', 'status'); }
@@ -981,8 +981,8 @@ function renderVendedorChart(services) {
     .sort((a, b) => b.val - a.val)
     .slice(0, 10);
 
-  // Altura dinâmica: 44px por vendedor, mínimo 360px para igualar o gráfico de seções
-  setChartHeight('container-vendedor-val', sorted.length, 44, 440, 560);
+  // Altura dinâmica: 52px por vendedor, sem mínimo fixo alto
+  setChartHeight('container-vendedor-val', sorted.length, 52, sorted.length * 52 + 40, 560);
 
   mkChart('chart-vendedor-val', 'bar', {
     labels: sorted.map(r => r.name),
@@ -1023,8 +1023,8 @@ function renderSecaoValorChart(services) {
     .map(([sec, rows]) => ({ sec, val: rows.reduce((a,r) => a+getValorItem(r),0) }))
     .sort((a,b) => b.val - a.val);
 
-  // Altura dinâmica: 44px por seção, mínimo 440px
-  setChartHeight('container-secao-valor', sorted.length, 44, 440, 700);
+  // Altura dinâmica: 52px por seção, proporcional ao número de itens
+  setChartHeight('container-secao-valor', sorted.length, 52, sorted.length * 52 + 40, 700);
 
   mkChart('chart-secao-valor', 'bar', {
     labels: sorted.map(s => s.sec),
