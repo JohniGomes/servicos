@@ -263,16 +263,64 @@
     <div class="space-y-4">
       <div>
         <label class="block text-xs font-semibold text-gray-600 mb-1">Loja</label>
-        <select id="import-loja" class="w-full text-sm border border-gray-200 rounded-lg px-3 py-2">
-          <option value="">— Selecione a loja —</option>
-          <option>BH SUL</option>
-          <option>BH NORTE</option>
-          <option>CONTAGEM</option>
-          <option>BRASILIA NORTE</option>
-          <option>BRASILIA SUL</option>
-          <option>JARDIM BOTÂNICO</option>
-          <option>GOIÂNIA</option>
-        </select>
+        <input id="import-loja" list="lojas-datalist" autocomplete="off"
+          placeholder="Digite para pesquisar a loja..."
+          class="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-300" />
+        <datalist id="lojas-datalist">
+          <option>Anhanguera</option>
+          <option>Anália Franco</option>
+          <option>Bauru</option>
+          <option>BH Norte</option>
+          <option>BH Sul</option>
+          <option>Brasília Norte</option>
+          <option>Brasília Sul</option>
+          <option>Campinas D. Pedro</option>
+          <option>Campo Grande</option>
+          <option>Contagem</option>
+          <option>Curitiba</option>
+          <option>Curitiba Atuba</option>
+          <option>Express Alto da Boa Vista</option>
+          <option>Express BH São Pedro</option>
+          <option>Express Campo Belo</option>
+          <option>Express Leblon</option>
+          <option>Express Pompéia</option>
+          <option>Express Vila Nova Conceição</option>
+          <option>Fortaleza</option>
+          <option>Goiânia</option>
+          <option>Guarulhos</option>
+          <option>Interlagos</option>
+          <option>Jaguaré</option>
+          <option>Jardim Botânico Df</option>
+          <option>Joinville</option>
+          <option>Jundiaí</option>
+          <option>Lar Center</option>
+          <option>Londrina</option>
+          <option>Maceió</option>
+          <option>Marginal Tietê 2</option>
+          <option>Morumbi</option>
+          <option>Natal</option>
+          <option>Niterói</option>
+          <option>Poa Estaleiro</option>
+          <option>Porto Alegre</option>
+          <option>Raposo Tavares</option>
+          <option>Ribeirão Preto</option>
+          <option>Ricardo Jafet</option>
+          <option>Rio Barra</option>
+          <option>Rio Norte</option>
+          <option>Salvador</option>
+          <option>Santos</option>
+          <option>Sorocaba</option>
+          <option>São Bernardo</option>
+          <option>São Caetano</option>
+          <option>São José</option>
+          <option>São José do Rio Preto</option>
+          <option>São José Dos Campos</option>
+          <option>São Leopoldo</option>
+          <option>Tamboré</option>
+          <option>Taubaté</option>
+          <option>Uberlândia</option>
+          <option>Vitória</option>
+        </datalist>
       </div>
 
       <div>
