@@ -206,7 +206,7 @@
 
 <!-- ── HEADER ── -->
 <header class="lm-header shadow-md sticky top-0 z-30">
-  <div class="max-w-screen-xl mx-auto flex items-center justify-between px-4 sm:px-6 py-2 sm:py-3">
+  <div class="w-full flex items-center justify-between px-4 sm:px-8 py-2 sm:py-3">
 
     <!-- Logo Leroy Merlin -->
     <div class="flex items-center gap-4">
@@ -270,7 +270,7 @@
 
 
 <!-- ── MAIN ── -->
-<main class="max-w-screen-xl mx-auto px-3 sm:px-6 py-4 sm:py-6" id="main-content">
+<main class="w-full px-3 sm:px-8 py-4 sm:py-6" id="main-content">
 
   <!-- FILTER BAR (compartilhado entre abas) -->
   <div class="filter-bar">
@@ -381,17 +381,18 @@
     </section>
 
     <!-- Gráficos resumo -->
+    <!-- Linha 1: Vendedores (meia largura) -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
       <div class="card">
         <h3 class="card-title">Top 10 Vendedores por Serviços (R$)</h3>
         <div id="container-vendedor-val" style="position:relative"><canvas id="chart-vendedor-val"></canvas></div>
       </div>
-      <!-- Seção chart: ocupa o espaço restante no desktop, full-width no mobile -->
-      <div class="card">
-        <h3 class="card-title">Serviços por Seção — Valor (R$)</h3>
-        <div id="container-secao-valor" style="position:relative;height:440px;width:100%">
-          <canvas id="chart-secao-valor"></canvas>
-        </div>
+    </div>
+    <!-- Linha 2: Seção — largura total da tela -->
+    <div class="card mb-6">
+      <h3 class="card-title">Serviços por Seção — Valor (R$)</h3>
+      <div id="container-secao-valor" style="position:relative;height:400px;width:100%">
+        <canvas id="chart-secao-valor"></canvas>
       </div>
     </div>
   </div>
@@ -1006,32 +1007,39 @@ function renderSecaoValorChart(services) {
   const vals   = sorted.map(s => s.val);
 
   mkChart('chart-secao-valor', 'bar', {
-    labels, datasets: [{ label: 'Valor (R$)', data: vals, backgroundColor: PALETTE }]
+    labels,
+    datasets: [{
+      label: 'Valor (R$)',
+      data: vals,
+      backgroundColor: PALETTE,
+      barPercentage: 0.6,
+      categoryPercentage: 0.75,
+    }]
   }, {
     plugins: {
       legend: { display: false },
       datalabels: {
         anchor: 'end',
-        align: 'end',
+        align: 'top',
         color: '#253B35',
         font: { size: 11, weight: '600' },
         formatter: v => 'R$ ' + fmtK(v),
         clip: false,
       }
     },
-    layout: { padding: { top: 28, bottom: 4 } },
+    layout: { padding: { top: 32, bottom: 4, left: 8, right: 8 } },
     scales: {
       y: { display: false, grid: { display: false }, border: { display: false } },
       x: {
         grid: { display: false }, border: { display: false },
         ticks: {
-          font: { size: 10 },
-          maxRotation: 45,
+          font: { size: 11 },
+          maxRotation: 35,
           minRotation: 0,
           autoSkip: false,
           callback: function(val) {
             const lbl = this.getLabelForValue(val);
-            return lbl.length > 16 ? lbl.slice(0, 15) + '…' : lbl;
+            return lbl.length > 18 ? lbl.slice(0, 17) + '…' : lbl;
           }
         }
       }
