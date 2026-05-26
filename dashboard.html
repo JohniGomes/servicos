@@ -916,13 +916,13 @@ function renderKpiMaster(services, visits) {
     const alertStyle = c.alert ? 'border-color:#ef4444;background:#fef2f2;' : `border-color:var(--${c.color});`;
     const valColor   = c.alert ? 'color:#ef4444;' : '';
     return `
-    <div class="kpi-card bg-white rounded-2xl shadow-sm p-4 border-l-4" style="${alertStyle}">
-      <div class="flex items-center justify-between mb-2">
-        <span class="text-xl">${c.icon}</span>
+    <div class="kpi-card bg-white rounded-2xl shadow-sm p-5 border-l-4" style="${alertStyle}">
+      <div class="flex items-center justify-between mb-3">
+        <span class="text-2xl">${c.icon}</span>
         ${c.sub ? `<span class="badge" style="background:var(--${c.color}-light);color:var(--${c.color})">${c.sub}</span>` : ''}
       </div>
-      <div class="text-2xl font-bold" style="${valColor}color:${c.alert?'#ef4444':'#1f2937'}">${c.value}</div>
-      <div class="text-xs text-gray-500 mt-1">${c.label}</div>
+      <div class="text-3xl font-bold" style="${valColor}color:${c.alert?'#ef4444':'#1f2937'}">${c.value}</div>
+      <div class="text-sm text-gray-500 mt-1">${c.label}</div>
     </div>`;
   }).join('');
 }
