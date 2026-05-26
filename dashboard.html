@@ -921,7 +921,7 @@ function renderKpiMaster(services, visits) {
     <div class="kpi-card bg-white rounded-2xl shadow-sm p-5 border-l-4" style="${alertStyle}">
       <div class="flex items-center justify-between mb-3">
         <span class="text-3xl">${c.icon}</span>
-        ${c.sub ? `<span class="badge" style="background:var(--${c.color}-light);color:var(--${c.color});font-size:.85rem;padding:3px 10px">${c.sub}</span>` : ''}
+        ${c.sub ? `<span class="badge" style="background:var(--${c.color}-light);color:var(--${c.color});font-size:1rem;padding:4px 12px">${c.sub}</span>` : ''}
       </div>
       <div style="font-size:2.4rem;font-weight:700;line-height:1.1;${valColor}color:${c.alert?'#ef4444':'#1f2937'}">${c.value}</div>
       <div style="font-size:1.15rem;color:#6b7280;margin-top:6px">${c.label}</div>
