@@ -920,11 +920,11 @@ function renderKpiMaster(services, visits) {
     return `
     <div class="kpi-card bg-white rounded-2xl shadow-sm p-5 border-l-4" style="${alertStyle}">
       <div class="flex items-center justify-between mb-3">
-        <span class="text-2xl">${c.icon}</span>
-        ${c.sub ? `<span class="badge" style="background:var(--${c.color}-light);color:var(--${c.color})">${c.sub}</span>` : ''}
+        <span class="text-3xl">${c.icon}</span>
+        ${c.sub ? `<span class="badge" style="background:var(--${c.color}-light);color:var(--${c.color});font-size:.85rem;padding:3px 10px">${c.sub}</span>` : ''}
       </div>
-      <div class="text-3xl font-bold" style="${valColor}color:${c.alert?'#ef4444':'#1f2937'}">${c.value}</div>
-      <div class="text-sm text-gray-500 mt-1">${c.label}</div>
+      <div style="font-size:2.4rem;font-weight:700;line-height:1.1;${valColor}color:${c.alert?'#ef4444':'#1f2937'}">${c.value}</div>
+      <div style="font-size:1rem;color:#6b7280;margin-top:6px">${c.label}</div>
     </div>`;
   }).join('');
 }
