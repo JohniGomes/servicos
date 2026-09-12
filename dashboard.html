@@ -457,6 +457,12 @@
       </div>
     </div>
 
+    <!-- Visitas de Reforma -->
+    <div class="card mb-6">
+      <h3 class="card-title">🏗 Visitas de Reforma</h3>
+      <div id="reforma-visits-content"></div>
+    </div>
+
     <!-- Insights IA — dentro da aba Análises -->
     <div class="card mb-6">
       <h3 class="card-title">Insights</h3>
@@ -555,6 +561,12 @@ function isService(row) {
 function isVisit(row) {
   const val = (getDesc(row) || '').toUpperCase().trim();
   return val.startsWith('VISITA');
+}
+
+// Visitas de Reforma: descrição contém "REFORMA"
+function isReformVisit(row) {
+  const val = (getDesc(row) || '').toUpperCase().trim();
+  return val.startsWith('VISITA') && val.includes('REFORMA');
 }
 
 // Seção da linha (coluna K)
@@ -880,6 +892,7 @@ function renderAll() {
   renderSecoesTable(services);
   renderTopItens(services);
   renderPenetracao(services, filteredData);
+  renderReformaVisits(filteredData);
 }
 
 // ───────────────────────────────────────────────
@@ -1208,6 +1221,52 @@ function renderPenetracao(services, allData) {
       </td>
     </tr>`;
   }).join('') || '<tr><td colspan="4" class="text-center py-8 text-gray-400 text-sm">Sem dados</td></tr>';
+}
+
+// ───────────────────────────────────────────────
+// VISITAS DE REFORMA
+// ───────────────────────────────────────────────
+function renderReformaVisits(allData) {
+  const el = document.getElementById('reforma-visits-content');
+  if (!el) return;
+
+  const reformas = allData.filter(isReformVisit);
+
+  if (!reformas.length) {
+    el.innerHTML = '<p class="text-gray-400 text-sm py-2">Nenhuma visita de reforma registrada.</p>';
+    return;
+  }
+
+  // Agrupa por descrição + vendedor para evitar duplicatas do mesmo pedido
+  const vistas = [];
+  const seen = new Set();
+  reformas.forEach(r => {
+    const desc    = getDesc(r) || '—';
+    const ldap    = getLDAP(r) || '';
+    const vendedor = ldap.split(' - ').slice(1).join(' - ') || ldap || '—';
+    const pedido  = getPedido(r);
+    const key     = `${pedido}|${desc}`;
+    if (seen.has(key)) return;
+    seen.add(key);
+    vistas.push({ desc, vendedor, pedido });
+  });
+
+  el.innerHTML = `
+    <div class="flex items-center gap-2 mb-3">
+      <span class="font-bold text-lg" style="color:#44823C">${vistas.length}</span>
+      <span class="text-gray-500 text-sm">visita${vistas.length !== 1 ? 's' : ''} de reforma</span>
+    </div>
+    <div class="space-y-2">
+      ${vistas.map((v, i) => `
+        <div class="flex items-start gap-3 p-3 rounded-xl" style="background:#f8fdf4;border:1px solid #d4edcf">
+          <span class="font-bold text-sm mt-0.5" style="color:#44823C">${i + 1}</span>
+          <div class="flex-1 min-w-0">
+            <div class="font-semibold text-sm" style="color:#253B35">${v.desc}</div>
+            <div class="text-sm text-gray-500 mt-0.5">👤 ${v.vendedor}</div>
+          </div>
+        </div>
+      `).join('')}
+    </div>`;
 }
 
 // ───────────────────────────────────────────────
