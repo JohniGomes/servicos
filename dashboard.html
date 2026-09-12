@@ -686,7 +686,7 @@ function getField(row, ...keys) {
 function getValorItem(row)  { return toNum(getField(row, 'Valor total do Item', 'Valor Total do Item', 'valor total do item')); }
 function getValorTotal(row) { return toNum(getField(row, 'Valor Total', 'Valor total', 'valor total')); } // col E — total do pedido
 function getQtd(row)        { return toNum(getField(row, 'Quantidade', 'quantidade', 'Qtd')); }
-function getPedido(row)     { return getField(row, 'Número do pedido', 'Numero do pedido', 'número do pedido') || Math.random(); }
+function getPedido(row)     { return getField(row, 'Número', 'Número do pedido', 'Numero do pedido', 'número do pedido') || Math.random(); }
 function getLDAP(row) {
   // Tenta colunas conhecidas
   const val = getField(row, 'LDAP', 'ldap', 'Vendedor', 'vendedor', 'Nome do Vendedor', 'Consultor', 'consultor');
