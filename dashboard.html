@@ -1205,7 +1205,9 @@ function renderPenetracao(services, allData) {
   const badge = document.getElementById('pct-geral-badge');
   if (badge) badge.textContent = `Geral: ${pctGeral}%`;
 
-  document.getElementById('table-penetracao').innerHTML = linhas.map(l => {
+  const tblPen = document.getElementById('table-penetracao');
+  if (!tblPen) return;
+  tblPen.innerHTML = linhas.map(l => {
     const barW = Math.min(Math.round(l.pct / 100 * 60), 60);
     const cor  = l.pct >= 30 ? '#44823C' : l.pct >= 15 ? '#B0B676' : '#9EA5B6';
     return `
